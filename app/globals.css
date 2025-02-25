@@ -1,0 +1,48 @@
+@import "tailwindcss/base";
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
+
+body {
+  font-family: "Arial", sans-serif;
+  background-color: #f0f0f0;
+  color: #000000;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-weight: 900;
+}
+
+input,
+textarea,
+button {
+  font-weight: 700;
+}
+
+/* Add some custom utility classes for neobrutalism design */
+@layer utilities {
+  .rotate-1 {
+    transform: rotate(1deg);
+  }
+  .rotate-2 {
+    transform: rotate(2deg);
+  }
+  .-rotate-1 {
+    transform: rotate(-1deg);
+  }
+  .-rotate-2 {
+    transform: rotate(-2deg);
+  }
+  .shadow-brutal {
+    box-shadow: 4px 4px 0 0 #000000;
+  }
+  .shadow-brutal-hover {
+    box-shadow: 6px 6px 0 0 #000000;
+  }
+}
+
+
