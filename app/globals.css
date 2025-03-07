@@ -1,48 +1,77 @@
-@import "tailwindcss/base";
-@import "tailwindcss/components";
-@import "tailwindcss/utilities";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-body {
-  font-family: "Arial", sans-serif;
-  background-color: #f0f0f0;
-  color: #000000;
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 240 10% 3.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 3.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 3.9%;
+    --primary: 252 59% 48%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 60 94% 56%;
+    --secondary-foreground: 240 5.9% 10%;
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 46.1%;
+    --accent: 240 4.8% 95.9%;
+    --accent-foreground: 240 5.9% 10%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 5.9% 90%;
+    --input: 240 5.9% 90%;
+    --ring: 240 5.9% 10%;
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 240 10% 3.9%;
+    --card-foreground: 0 0% 98%;
+    --popover: 240 10% 3.9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 252 59% 54%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 60 94% 56%;
+    --secondary-foreground: 240 5.9% 10%;
+    --muted: 240 3.7% 15.9%;
+    --muted-foreground: 240 5% 64.9%;
+    --accent: 240 3.7% 15.9%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 3.7% 15.9%;
+    --input: 240 3.7% 15.9%;
+    --ring: 240 4.9% 83.9%;
+  }
 }
 
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
-  font-weight: 900;
-}
-
-input,
-textarea,
-button {
-  font-weight: 700;
-}
-
-/* Add some custom utility classes for neobrutalism design */
-@layer utilities {
-  .rotate-1 {
-    transform: rotate(1deg);
+@layer base {
+  * {
+    @apply border-border;
   }
-  .rotate-2 {
-    transform: rotate(2deg);
-  }
-  .-rotate-1 {
-    transform: rotate(-1deg);
-  }
-  .-rotate-2 {
-    transform: rotate(-2deg);
-  }
-  .shadow-brutal {
-    box-shadow: 4px 4px 0 0 #000000;
-  }
-  .shadow-brutal-hover {
-    box-shadow: 6px 6px 0 0 #000000;
+  body {
+    @apply bg-background text-foreground;
   }
 }
 
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-100%);
+  }
+}
+
+.marquee-left {
+  animation-direction: normal;
+}
+
+.marquee-right {
+  animation-direction: reverse;
+}
 

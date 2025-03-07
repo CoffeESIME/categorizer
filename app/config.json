@@ -1,0 +1,12 @@
+{
+  "upload_dir": "C:\\Users\\USER\\AppData\\Local\\langflow\\langflow\\Cache",
+  "output_dir": "C:\\Users\\USER\\AppData\\Local\\langflow\\langflow\\Output",
+  "default_author": "Omar Khayyam",
+  "forbidden_words": ["palabra1", "palabra2", "string_a_eliminar"],
+  "default_work": "Rubaiyat",
+  "ocr_parameters": {
+    "language": "spa",
+    "psm": 3,
+    "apply_otsu": false
+  }
+}

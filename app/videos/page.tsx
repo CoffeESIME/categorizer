@@ -2,25 +2,29 @@
 
 import { useState, useCallback } from "react";
 import { useDropzone } from "react-dropzone";
+import { runFlow } from "../utils/langflowAPI";
 import { TitleComponent } from "../components/TitleComponent/TtitleComponent";
 import BrutalButton from "../components/ButtonComponent/ButtonComponent";
 import { BrutalInput } from "../components/InputComponent/InputComponent";
+import BrutalDropDown from "../components/DropDownComponent/DropdownComponent";
+import BrutalCheckbox from "../components/CheckBoxComponent/CheckBoxComponent";
 import { ButtonLink } from "../components/ButtonLink/ButtonLink";
 
 interface Metadata {
   author: string;
   description: string;
   date: string;
-  book: string;
+  title: string;
   tags: string[];
   themes: string[];
   [key: string]: string | string[];
 }
 
-export default function JustImages() {
+export default function VideoUploadMultiStep() {
+  // Control de pasos: 1 = subir video, 2 = metadatos, 3 = finalizado
   const [step, setStep] = useState<1 | 2 | 3>(1);
 
-  // Para la imagen y su ruta
+  // Estado para el video y la ruta que retorna el backend
   const [file, setFile] = useState<File | null>(null);
   const [filePath, setFilePath] = useState<string>("");
 
@@ -28,53 +32,55 @@ export default function JustImages() {
   const [uploading, setUploading] = useState(false);
   const [generatingDescription, setGeneratingDescription] = useState(false);
 
-  // Metadatos
+  // Estado para metadatos y campos personalizados
   const [metadata, setMetadata] = useState<Metadata>({
     author: "",
     description: "",
     date: "",
-    book: "",
+    title: "",
     tags: [],
     themes: [],
   });
   const [customFields, setCustomFields] = useState<string[]>([]);
 
-  // Para inputs de tags y themes
+  // Estados locales para inputs de tags y themes (permiten espacios)
   const [tagsInput, setTagsInput] = useState<string>("");
   const [themesInput, setThemesInput] = useState<string>("");
 
-  // Configuración de Dropzone
+  // Configuración de Dropzone para videos
   const onDrop = useCallback((acceptedFiles: File[]) => {
     setFile(acceptedFiles[0]);
   }, []);
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
-    accept: { "image/*": [] },
+    accept: { "video/*": [] },
   });
 
-  // Paso 1: Subir Imagen
+  // ------------------------------
+  // Paso 1: Subir Video
+  // ------------------------------
   const handleUpload = async () => {
     if (!file) return;
     setUploading(true);
     try {
       const formData = new FormData();
       formData.append("file", file);
-      const uploadResponse = await fetch("/api/upload", {
-        method: "POST",
-        body: formData,
-      });
+      const uploadResponse = await runFlow({ image_path: "data" });
       const uploadData = await uploadResponse.json();
-      console.log("Imagen subida:", uploadData);
+      console.log("Video subido:", uploadData);
+      // Se espera que el endpoint retorne 'file_path'
       setFilePath(uploadData.file_path);
       setStep(2);
     } catch (error) {
-      console.error("Error al subir la imagen:", error);
+      console.error("Error al subir el video:", error);
     } finally {
       setUploading(false);
     }
   };
 
+  // ------------------------------
   // Paso 2: Configurar Metadatos y Generar Descripción
+  // ------------------------------
   const handleMetadataChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
@@ -90,25 +96,24 @@ export default function JustImages() {
     }
   };
 
+  // Llamada para generar descripción, tags y themes a partir del video
   const handleGenerateDescription = async () => {
     if (!filePath) return;
     setGeneratingDescription(true);
     try {
-      const response = await fetch("/api/generateDescription", {
+      const response = await fetch("/api/generateVideoDescription", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ image_path: filePath }),
+        body: JSON.stringify({ video_path: filePath }),
       });
       const data = await response.json();
-      console.log("Respuesta de generación:", data);
-
+      console.log("Respuesta de descripción:", data);
       setMetadata((prev) => ({
         ...prev,
         description: data.description || "",
         tags: data.tags || [],
         themes: data.themes || [],
       }));
-
       setTagsInput(data.tags ? data.tags.join(", ") : "");
       setThemesInput(data.themes ? data.themes.join(", ") : "");
     } catch (error) {
@@ -118,7 +123,7 @@ export default function JustImages() {
     }
   };
 
-  // Envío final
+  // Envío final de metadatos y ruta del video
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const tagsArray = tagsInput
@@ -130,36 +135,32 @@ export default function JustImages() {
       .map((item) => item.trim())
       .filter((item) => item);
     const submissionData = {
-      imageUrl: filePath,
+      videoUrl: filePath,
       ...metadata,
       tags: tagsArray,
       themes: themesArray,
     };
     try {
-      const backendResponse = await fetch("/api/submit", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(submissionData),
-      });
+      const backendResponse = await runFlow({ image_path: "data" });
       if (!backendResponse.ok) {
         throw new Error("Error al enviar los datos al backend");
       }
-      console.log("Datos enviados correctamente");
+      console.log("Metadatos del video enviados correctamente");
       setStep(3);
     } catch (error) {
       console.error("Error en el envío final:", error);
     }
   };
 
-  // Paso 3: Final
-  const handleNewImage = () => {
+  // Reiniciar para subir otro video
+  const handleNewVideo = () => {
     setFile(null);
     setFilePath("");
     setMetadata({
       author: "",
       description: "",
       date: "",
-      book: "",
+      title: "",
       tags: [],
       themes: [],
     });
@@ -171,11 +172,11 @@ export default function JustImages() {
 
   return (
     <div className="container mx-auto p-4 min-h-screen flex flex-col items-center justify-center bg-yellow-100">
-      <TitleComponent title="Send Your Image" variant="neobrutalism" />
+      <TitleComponent title="Send Your Video" variant="neobrutalism" />
       <div className="max-w-xl mx-auto p-4 border-4 border-black bg-white rounded-lg space-y-6">
         {step === 1 && (
           <div>
-            <h2 className="text-2xl font-bold mb-4">Paso 1: Subir Imagen</h2>
+            <h2 className="text-2xl font-bold mb-4">Paso 1: Subir Video</h2>
             <div
               {...getRootProps()}
               className={`p-6 border-4 border-black rounded-lg text-center cursor-pointer text-2xl ${
@@ -184,10 +185,12 @@ export default function JustImages() {
             >
               <input {...getInputProps()} />
               {file ? (
-                <p>Imagen seleccionada: {file.name}</p>
+                <p className="text-2xl text-black font-bold">
+                  Video seleccionado: {file.name}
+                </p>
               ) : (
                 <p className="text-lg font-bold">
-                  Arrastra y suelta una imagen, o haz click para seleccionar
+                  Arrastra y suelta un video, o haz click para seleccionar
                 </p>
               )}
             </div>
@@ -197,7 +200,7 @@ export default function JustImages() {
               variant="blue"
               className="mt-4"
             >
-              {uploading ? "Subiendo..." : "Subir Imagen"}
+              {uploading ? "Subiendo..." : "Subir Video"}
             </BrutalButton>
           </div>
         )}
@@ -212,11 +215,11 @@ export default function JustImages() {
               >
                 Volver
               </BrutalButton>
-              <h2 className="text-2xl font-bold">Paso 2: Metadatos</h2>
+              <h2 className="text-2xl font-bold">
+                Paso 2: Metadatos del Video
+              </h2>
             </div>
-            <p className="mb-2">Imagen subida en: {filePath}</p>
-
-            {/* Campos de metadatos */}
+            <p className="mb-2">Video subido en: {filePath}</p>
             <BrutalInput
               type="text"
               name="author"
@@ -227,10 +230,10 @@ export default function JustImages() {
             />
             <BrutalInput
               type="text"
-              name="book"
-              value={metadata.book}
+              name="title"
+              value={metadata.title}
               onChange={handleMetadataChange}
-              placeholder="Libro"
+              placeholder="Título del video"
               className="w-full text-xl mb-2"
             />
             <BrutalInput
@@ -245,7 +248,7 @@ export default function JustImages() {
               value={metadata.description}
               onChange={handleMetadataChange}
               placeholder="Descripción (editable)"
-              className="w-full p-4 border-4 border-black rounded-lg text-xl bg-orange-300 placeholder-black"
+              className="w-full p-4 border-4 border-black rounded-lg text-xl bg-orange-300 placeholder-black mb-2"
             />
             <BrutalInput
               type="text"
@@ -253,7 +256,7 @@ export default function JustImages() {
               value={tagsInput}
               onChange={(e) => setTagsInput(e.target.value)}
               placeholder="Tags (separados por coma, espacios permitidos)"
-              className="w-full text-xl"
+              className="w-full text-xl mb-2"
             />
             <BrutalInput
               type="text"
@@ -261,10 +264,9 @@ export default function JustImages() {
               value={themesInput}
               onChange={(e) => setThemesInput(e.target.value)}
               placeholder="Themes (separados por coma, espacios permitidos)"
-              className="w-full text-xl"
+              className="w-full text-xl mb-2"
             />
 
-            {/* Campos personalizados */}
             {customFields.map((field) => (
               <BrutalInput
                 key={field}
@@ -273,40 +275,35 @@ export default function JustImages() {
                 value={metadata[field] as string}
                 onChange={handleMetadataChange}
                 placeholder={field}
-                className="w-full text-xl bg-green-300"
+                className="w-full text-xl bg-gray-200 mb-2"
               />
             ))}
+
             <BrutalButton variant="red" onClick={addCustomField}>
               Añadir campo personalizado
             </BrutalButton>
-
-            {/* Botón para generar descripción */}
-            <BrutalButton
-              type="button"
-              onClick={handleGenerateDescription}
-              disabled={generatingDescription || !filePath}
-              variant="teal"
-            >
-              {generatingDescription ? "Generando..." : "Generar Descripción"}
-            </BrutalButton>
-
-            {/* Botón para enviar los datos finales */}
-            <BrutalButton
-              type="submit"
-              disabled={uploading || generatingDescription || !filePath}
-              variant="blue"
-            >
-              Enviar
-            </BrutalButton>
+            <div className="flex flex-col space-y-4">
+              <BrutalButton
+                type="button"
+                onClick={handleGenerateDescription}
+                disabled={generatingDescription || !filePath}
+                variant="teal"
+              >
+                {generatingDescription ? "Generando..." : "Generar Descripción"}
+              </BrutalButton>
+              <BrutalButton type="submit" variant="blue">
+                Enviar
+              </BrutalButton>
+            </div>
           </form>
         )}
 
         {step === 3 && (
           <div className="text-center space-y-4">
             <h2 className="text-2xl font-bold">¡Proceso Finalizado!</h2>
-            <p>Los datos han sido enviados correctamente.</p>
-            <BrutalButton variant="green" onClick={handleNewImage}>
-              Subir otra imagen
+            <p>Los metadatos del video han sido enviados correctamente.</p>
+            <BrutalButton variant="green" onClick={handleNewVideo}>
+              Subir otro video
             </BrutalButton>
           </div>
         )}
