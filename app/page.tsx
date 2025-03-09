@@ -4,7 +4,7 @@ import { Marquee } from "./components/MarqueeComponent/MarqueeComponent";
 import { Badge } from "./components/BadgeComponent/BadgeComponent";
 import React from "react";
 import { TitleComponent } from "./components/TitleComponent/TtitleComponent";
-
+import { useFileStore } from "./store/filestore";
 export default function Home() {
   const marqueeOptions = [
     "Organize",
@@ -14,41 +14,27 @@ export default function Home() {
     "Empower Insights",
     "Simplify Data",
     "Intelligent Mapping",
+    "Organize",
   ];
+  const { files } = useFileStore();
+  console.log(files);
   return (
     <main className="container mx-auto p-4 min-h-screen flex flex-col items-center justify-center bg-yellow-100">
-      <TitleComponent title="Let's Organize It" variant="red"></TitleComponent>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        <CategoryButton href="/ocr" label="OCR Image" color="bg-blue-400" />
-        <CategoryButton
-          href="/fill-form"
-          label="Fill Form"
-          color="bg-blue-400"
-        />
+      <TitleComponent title="Categorizador" variant="red" />
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-8">
         <CategoryButton
           href="/upload-files"
-          label="Upload multiple files"
-          color="bg-blue-400"
-        />
-        <CategoryButton
-          href="/just-images"
-          label="Just Images"
-          color="bg-blue-400"
-        />
-        <CategoryButton href="/videos" label="Video" color="bg-blue-400" />
-        <CategoryButton
-          href="/visualizer"
-          label="Visualization"
-          color="bg-blue-400"
-        />
-        <CategoryButton
-          href="/ask-something"
-          label="Preguntar"
+          label="Subir Archivos"
           color="bg-blue-400"
         />
         <CategoryButton
           href="/pending"
           label="Pendientes"
+          color="bg-blue-400"
+        />
+        <CategoryButton
+          href="/processing"
+          label="Procesar"
           color="bg-blue-400"
         />
       </div>

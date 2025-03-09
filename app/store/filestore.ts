@@ -1,28 +1,37 @@
-// src/store/fileStore.ts
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-interface FileItem {
-  filePath: any;
-  file: File;
+
+export type FileStatus = "pending" | "uploaded" | "categorized";
+
+export interface FileItem {
   id: string;
+  file?: File;
+  original_name: string;
+  filePath?: string;
   file_url?: string;
-  selected: boolean;
-  type: string;
-  original_name?: string;
+  file_type?: string;
+  selected?: boolean;
+  status: FileStatus;
 }
 
 interface FileStore {
   files: FileItem[];
+  // Funciones básicas
   addFiles: (newFiles: FileItem[]) => void;
+  setFiles: (newFiles: FileItem[]) => void;
   updateFilePath: (id: string, path: string) => void;
+  updateFile: (id: string, updates: Partial<FileItem>) => void;
+  removeFile: (id: string) => void;
   clearFiles: () => void;
   toggleSelection: (id: string) => void;
   toggleAllSelection: (selected: boolean) => void;
+  // Selectores
   getSelectedFiles: () => FileItem[];
   filterByType: (type: string) => FileItem[];
+  getPendingFiles: () => FileItem[];
+  getFileById: (id: string) => FileItem | undefined;
 }
 
-// Store de Zustand con persistencia
 export const useFileStore = create<FileStore>()(
   persist(
     (set, get) => ({
@@ -31,11 +40,25 @@ export const useFileStore = create<FileStore>()(
         set((state) => ({
           files: [...state.files, ...newFiles],
         })),
+      setFiles: (newFiles) =>
+        set((state) => ({
+          files: [...newFiles],
+        })),
       updateFilePath: (id, path) =>
         set((state) => ({
           files: state.files.map((file) =>
             file.id === id ? { ...file, filePath: path } : file
           ),
+        })),
+      updateFile: (id, updates) =>
+        set((state) => ({
+          files: state.files.map((file) =>
+            file.id === id ? { ...file, ...updates } : file
+          ),
+        })),
+      removeFile: (id) =>
+        set((state) => ({
+          files: state.files.filter((file) => file.id !== id),
         })),
       clearFiles: () => set({ files: [] }),
       toggleSelection: (id) =>
@@ -51,12 +74,17 @@ export const useFileStore = create<FileStore>()(
       getSelectedFiles: () => get().files.filter((file) => file.selected),
       filterByType: (type) =>
         get().files.filter((file) =>
-          type === "all" ? true : file.type.startsWith(type)
+          type === "all" ? true : file.file_type!.startsWith(type)
         ),
+      getPendingFiles: () =>
+        get().files.filter((file) => file.status === "pending"),
+      getFileById: (id) => get().files.find((file) => file.id === id),
     }),
     {
       name: "file-storage",
-      partialize: (state) => ({ files: state.files.filter((f) => f.file_url) }),
+      partialize: (state) => ({
+        //files: state.files.filter((f) => !!f.filePath),
+      }),
     }
   )
 );

@@ -1,21 +1,18 @@
 "use client";
-
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useDropzone } from "react-dropzone";
 import { TitleComponent } from "../components/TitleComponent/TtitleComponent";
 import BrutalButton from "../components/ButtonComponent/ButtonComponent";
 import { ButtonLink } from "../components/ButtonLink/ButtonLink";
 import categorizerAPI from "../utils/categorizerAPI";
 import CustomCheckbox from "../components/CheckBoxComponent/CheckBoxComponent";
-import { useFileStore } from "../store/filestore";
+import { FileItem, useFileStore } from "../store/filestore";
 
-// Componente principal
 export default function MultipleFileUpload() {
-  const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [step, setStep] = useState<0 | 1 | 2 | 3>(0);
   const [uploading, setUploading] = useState(false);
   const [filterType, setFilterType] = useState<string>("all");
 
-  // Acceso al store
   const {
     files,
     addFiles,
@@ -25,18 +22,21 @@ export default function MultipleFileUpload() {
     toggleAllSelection,
     getSelectedFiles,
     filterByType,
+    setFiles,
   } = useFileStore();
-
-  // Configuración de Dropzone
+  useEffect(() => {
+    setFiles([]);
+    setStep(1);
+  }, []);
   const onDrop = useCallback(
     (acceptedFiles: File[]) => {
-      const newFiles = acceptedFiles.map((file) => ({
+      const newFiles: FileItem[] = acceptedFiles.map((file) => ({
         file,
-        id: `${file.name}-${Date.now()}-${Math.random()
-          .toString(36)
-          .substring(2, 9)}`,
+        id: file.name,
         selected: false,
-        type: file.type,
+        original_name: file.name,
+        status: "pending",
+        file_type: file.type,
       }));
       addFiles(newFiles);
     },
@@ -48,64 +48,52 @@ export default function MultipleFileUpload() {
     multiple: true,
   });
 
-  // Paso 1: Subir archivos
   const handleUpload = async () => {
     if (files.length === 0) return;
 
     setUploading(true);
     try {
-      // Filtrar archivos no subidos
-      const filesToUpload = files.filter((fileItem) => !fileItem.filePath);
-      const fileObjects = filesToUpload.map((fileItem) => fileItem.file);
-
-      // Llamar a la API para subir archivos
+      const fileObjects = files;
+      console.log(fileObjects, "fileObjects");
       const uploadedFiles = await categorizerAPI.uploadFiles(fileObjects);
-
-      // Actualizar rutas en el store
       uploadedFiles.forEach((fileMetadata) => {
-        const matchingFile = filesToUpload.find(
-          (f) => f.file.name === fileMetadata.fileName
+        const matchingFile = files.find(
+          (f) => f.original_name === fileMetadata.original_name
         );
         if (matchingFile) {
-          updateFilePath(matchingFile.id, fileMetadata.filePath);
+          updateFilePath(matchingFile.id, fileMetadata.location);
         }
       });
 
       setStep(2);
     } catch (error) {
-      console.error("Error al subir los archivos:", error);
+      console.error("Error al subir archivos:", error);
       alert("Error al subir archivos. Por favor intenta nuevamente.");
     } finally {
       setUploading(false);
     }
   };
-  // Obtener lista de archivos filtrados
-  const getFilteredFiles = () => {
-    return filterByType(filterType);
-  };
 
-  // Obtener tipos únicos de archivos
+  const getFilteredFiles = () => filterByType(filterType);
+
   const getUniqueFileTypes = () => {
     const types = new Set<string>();
     files.forEach((file) => {
-      const mainType = file.type.split("/")[0];
+      const mainType = file.file_type!.split("/")[0];
       types.add(mainType);
     });
     return Array.from(types);
   };
 
-  // Manejar la selección de archivos para procesar
   const handleProcessFiles = () => {
     const selectedFiles = getSelectedFiles();
     if (selectedFiles.length === 0) {
-      alert("Por favor, selecciona al menos un archivo para procesar");
+      alert("Selecciona al menos un archivo para procesar");
       return;
     }
-
     setStep(3);
   };
 
-  // Iniciar nuevo proceso
   const handleNewUpload = () => {
     clearFiles();
     setStep(1);
@@ -147,12 +135,10 @@ export default function MultipleFileUpload() {
                       key={fileItem.id}
                       className="flex items-center justify-between p-2 border-b border-gray-300"
                     >
-                      <div className="flex items-center">
-                        <span className="text-sm font-medium truncate max-w-xs">
-                          {fileItem.file.name} (
-                          {(fileItem.file.size / 1024).toFixed(2)} KB)
-                        </span>
-                      </div>
+                      <span className="text-sm font-medium truncate max-w-xs">
+                        {fileItem.file.name} (
+                        {(fileItem.file.size / 1024).toFixed(2)} KB)
+                      </span>
                       <span className="text-xs bg-gray-200 px-2 py-1 rounded">
                         {fileItem.type}
                       </span>
@@ -241,12 +227,12 @@ export default function MultipleFileUpload() {
                         <CustomCheckbox
                           onChange={() => toggleSelection(fileItem.id)}
                           checked={fileItem.selected}
-                          label={fileItem.file.name}
-                        ></CustomCheckbox>
+                          label={fileItem.file!.name}
+                        />
                       </div>
                       <div className="flex items-center space-x-2">
                         <span className="text-xs bg-gray-200 px-2 py-1 rounded">
-                          {fileItem.type}
+                          {fileItem.file_type}
                         </span>
                         {fileItem.filePath && (
                           <span className="text-xs bg-green-200 px-2 py-1 rounded">
@@ -265,12 +251,10 @@ export default function MultipleFileUpload() {
             </div>
 
             <div className="mt-4 flex justify-between">
-              <div>
-                <span className="font-bold">
-                  {getSelectedFiles().length} de {files.length} archivos
-                  seleccionados
-                </span>
-              </div>
+              <span className="font-bold">
+                {getSelectedFiles().length} de {files.length} archivos
+                seleccionados
+              </span>
               <BrutalButton
                 onClick={handleProcessFiles}
                 disabled={getSelectedFiles().length === 0}
@@ -288,22 +272,6 @@ export default function MultipleFileUpload() {
               ¡Archivos Listos para Procesamiento!
             </h2>
             <p>Has seleccionado {getSelectedFiles().length} archivos.</p>
-
-            <div className="grid grid-cols-2 gap-4 mt-6">
-              <ButtonLink href="/process/convert" variant="default" size="lg">
-                <p className="text-xl">Convertir Archivos</p>
-              </ButtonLink>
-              <ButtonLink href="/process/analyze" variant="default" size="lg">
-                <p className="text-xl">Analizar Contenido</p>
-              </ButtonLink>
-              <ButtonLink href="/process/share" variant="default" size="lg">
-                <p className="text-xl">Compartir Archivos</p>
-              </ButtonLink>
-              <ButtonLink href="/process/merge" variant="default" size="lg">
-                <p className="text-xl">Combinar Archivos</p>
-              </ButtonLink>
-            </div>
-
             <div className="mt-8">
               <BrutalButton variant="red" onClick={handleNewUpload}>
                 Comenzar Nuevo Proceso

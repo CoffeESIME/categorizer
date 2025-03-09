@@ -7,23 +7,20 @@ export interface DropDownProps {
   buttonLabel?: string;
   options: { label: string; value: string }[];
   onSelect: (value: string) => void;
-  // Customización para el botón
-  buttonWidthClass?: string; // Ej: "w-72"
-  buttonBgClass?: string; // Ej: "bg-[#B8FF9F]"
-  buttonHoverBgClass?: string; // Ej: "hover:bg-[#99fc77]"
-  buttonPaddingClass?: string; // Ej: "px-3 py-2"
-  buttonBorderClass?: string; // Ej: "border-black"
-  buttonBorderWidthClass?: string; // Ej: "border-4"
-  buttonRoundedClass?: string; // Ej: "rounded-md"
-  buttonShadowClass?: string; // Ej: "focus:shadow-[2px_2px_0px_rgba(0,0,0,1)]"
-
-  // Customización para el dropdown (menú)
-  dropdownWidthClass?: string; // Ej: "w-72"
-  dropdownBgClass?: string; // Ej: "bg-white"
-  dropdownBorderClass?: string; // Ej: "border-black"
-  dropdownBorderWidthClass?: string; // Ej: "border-4"
-  dropdownShadowClass?: string; // Ej: "shadow-[2px_2px_0px_rgba(0,0,0,1)]"
-  dropdownRoundedClass?: string; // Ej: "rounded-md"
+  buttonWidthClass?: string;
+  buttonBgClass?: string;
+  buttonHoverBgClass?: string;
+  buttonPaddingClass?: string;
+  buttonBorderClass?: string;
+  buttonBorderWidthClass?: string;
+  buttonRoundedClass?: string;
+  buttonShadowClass?: string;
+  dropdownWidthClass?: string;
+  dropdownBgClass?: string;
+  dropdownBorderClass?: string;
+  dropdownBorderWidthClass?: string;
+  dropdownShadowClass?: string;
+  dropdownRoundedClass?: string;
 }
 
 const BrutalDropDown: React.FC<DropDownProps> = ({
