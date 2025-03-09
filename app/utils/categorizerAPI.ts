@@ -51,7 +51,6 @@ class CategorizerAPI {
     this.headers["Authorization"] = `Bearer ${token}`;
   }
 
-  // Sube múltiples archivos
   async uploadFiles(files: FileItem[]): Promise<FileMetadata[]> {
     const formData = new FormData();
     files.forEach((file) => {
@@ -76,7 +75,6 @@ class CategorizerAPI {
     }
   }
 
-  // Obtener archivos filtrados
   async getFiles(params?: {
     types?: string[];
     processed?: boolean;
@@ -93,7 +91,6 @@ class CategorizerAPI {
     }
   }
 
-  // Procesar un archivo con LLM (ejemplo)
   async processFileWithLLM(
     filePath: string,
     options: ProcessLLMOptions
@@ -119,7 +116,6 @@ class CategorizerAPI {
     }
   }
 
-  // Procesar imagen con OCR (ejemplo)
   async processImageWithOCR(filePath: string): Promise<OCRResult> {
     try {
       const response = await fetch(
@@ -142,7 +138,6 @@ class CategorizerAPI {
     }
   }
 
-  // Guardar metadatos de múltiples archivos
   async saveFilesMetadata(metadata: any[]): Promise<void> {
     try {
       const response = await fetch(

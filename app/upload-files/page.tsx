@@ -136,11 +136,11 @@ export default function MultipleFileUpload() {
                       className="flex items-center justify-between p-2 border-b border-gray-300"
                     >
                       <span className="text-sm font-medium truncate max-w-xs">
-                        {fileItem.file.name} (
-                        {(fileItem.file.size / 1024).toFixed(2)} KB)
+                        {fileItem.file!.name} (
+                        {(fileItem.file!.size / 1024).toFixed(2)} KB)
                       </span>
                       <span className="text-xs bg-gray-200 px-2 py-1 rounded">
-                        {fileItem.type}
+                        {fileItem.file_type}
                       </span>
                     </li>
                   ))}

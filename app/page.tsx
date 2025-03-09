@@ -4,7 +4,6 @@ import { Marquee } from "./components/MarqueeComponent/MarqueeComponent";
 import { Badge } from "./components/BadgeComponent/BadgeComponent";
 import React from "react";
 import { TitleComponent } from "./components/TitleComponent/TtitleComponent";
-import { useFileStore } from "./store/filestore";
 export default function Home() {
   const marqueeOptions = [
     "Organize",
@@ -16,11 +15,9 @@ export default function Home() {
     "Intelligent Mapping",
     "Organize",
   ];
-  const { files } = useFileStore();
-  console.log(files);
   return (
     <main className="container mx-auto p-4 min-h-screen flex flex-col items-center justify-center bg-yellow-100">
-      <TitleComponent title="Categorizador" variant="red" />
+      <TitleComponent title="Let's Categorize It" variant="red" />
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-8">
         <CategoryButton
           href="/upload-files"
@@ -30,11 +27,6 @@ export default function Home() {
         <CategoryButton
           href="/pending"
           label="Pendientes"
-          color="bg-blue-400"
-        />
-        <CategoryButton
-          href="/processing"
-          label="Procesar"
           color="bg-blue-400"
         />
       </div>
