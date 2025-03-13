@@ -23,8 +23,6 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const { files, getSelectedFiles, filterByType } = useFileStore();
-  console.log(files);
   return (
     <html lang="en">
       <body

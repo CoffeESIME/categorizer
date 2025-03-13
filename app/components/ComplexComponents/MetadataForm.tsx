@@ -4,13 +4,15 @@ import React from "react";
 import CustomCheckbox from "../CheckBoxComponent/CheckBoxComponent";
 import { BrutalInput } from "../InputComponent/InputComponent";
 import BrutalButton from "../ButtonComponent/ButtonComponent";
+
 interface MetadataFormProps {
   metadata: any;
   autoFields: {
     author: boolean;
     title: boolean;
-    description: boolean;
+    content: boolean;
     tags: boolean;
+    sentiment: boolean;
   };
   toggleAutoField: (field: string) => void;
   updateMetadata: (updates: Partial<any>) => void;
@@ -32,14 +34,10 @@ export const MetadataForm: React.FC<MetadataFormProps> = ({
     <div className="space-y-4 border-4 border-black rounded-lg p-4 bg-white">
       <h3 className="text-xl font-bold">Metadatos del Archivo</h3>
       <div className="grid grid-cols-1 gap-4">
+        {/* === AUTHOR === */}
         <div>
           <div className="flex justify-between items-center">
             <label className="font-bold">Autor</label>
-            <CustomCheckbox
-              checked={autoFields.author}
-              onChange={() => toggleAutoField("author")}
-              label="Auto"
-            />
           </div>
           <BrutalInput
             type="text"
@@ -49,14 +47,11 @@ export const MetadataForm: React.FC<MetadataFormProps> = ({
             className="w-full p-2 border-4 border-black rounded-lg"
           />
         </div>
+
+        {/* === TITLE === */}
         <div>
           <div className="flex justify-between items-center">
             <label className="font-bold">Título</label>
-            <CustomCheckbox
-              checked={autoFields.title}
-              onChange={() => toggleAutoField("title")}
-              label="Auto"
-            />
           </div>
           <BrutalInput
             type="text"
@@ -66,32 +61,40 @@ export const MetadataForm: React.FC<MetadataFormProps> = ({
             className="w-full bg-white"
           />
         </div>
+
+        {/* === CONTENT (antes "Descripción") === */}
         <div>
           <div className="flex justify-between items-center">
-            <label className="font-bold">Descripción</label>
-            <CustomCheckbox
-              checked={autoFields.description}
-              onChange={() => toggleAutoField("description")}
-              label="Auto"
-            />
+            <label className="font-bold">Contenido</label>
           </div>
           <BrutalInput
             type="textarea"
-            placeholder="Descripción del contenido"
-            value={metadata.description || ""}
-            onChange={(e) => updateMetadata({ description: e.target.value })}
+            placeholder="Contenido del archivo"
+            value={metadata.content || ""}
+            onChange={(e) => updateMetadata({ content: e.target.value })}
             className="w-full p-2 border-4 border-black rounded-lg h-32"
             multiline
           />
         </div>
+
+        {/* === SENTIMENT === */}
+        <div>
+          <div className="flex justify-between items-center">
+            <label className="font-bold">Sentimiento</label>
+          </div>
+          <BrutalInput
+            type="text"
+            placeholder="Sentimiento (ej: positivo, negativo...)"
+            value={metadata.sentiment || ""}
+            onChange={(e) => updateMetadata({ sentiment: e.target.value })}
+            className="w-full p-2 border-4 border-black rounded-lg"
+          />
+        </div>
+
+        {/* === TAGS === */}
         <div>
           <div className="flex justify-between items-center">
             <label className="font-bold">Tags</label>
-            <CustomCheckbox
-              checked={autoFields.tags}
-              onChange={() => toggleAutoField("tags")}
-              label="Auto"
-            />
           </div>
           <div className="flex space-x-2">
             <BrutalInput
@@ -136,6 +139,7 @@ export const MetadataForm: React.FC<MetadataFormProps> = ({
             ))}
           </div>
         </div>
+
         {metadata.extractedText && (
           <div>
             <label className="font-bold">Texto Extraído</label>

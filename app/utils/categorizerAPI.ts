@@ -1,4 +1,3 @@
-// src/utils/categorizerAPI.ts
 import axios from "axios";
 import { FileItem, FileStatus } from "../store/filestore";
 
@@ -13,22 +12,18 @@ export interface FileMetadata {
   status: FileStatus;
 }
 
-export interface ProcessLLMOptions {
-  extractAuthor: boolean;
-  extractTitle: boolean;
-  extractDescription: boolean;
-  extractTags: boolean;
-  model: string;
-  temperature: number;
-  maxTokens: number;
-}
-
 export interface ProcessLLMResult {
+  raw_analysis?: any;
+  raw?: any;
+  error?: any;
   author?: string;
   title?: string;
   description?: string;
   tags?: string[];
-  extractedText?: string;
+  content?: string;
+  result?: string;
+  ocr_text?: string;
+  text?: string;
 }
 
 export interface OCRResult {
@@ -36,11 +31,28 @@ export interface OCRResult {
   confidence?: number;
 }
 
+// Nuevo tipo unificado para llamar al endpoint
+export type TaskType = "text" | "image_description" | "ocr";
+export type OCRMethod = "tesseract" | "llm";
+export type ProcessingMethod = "manual" | "llm" | "ocr";
+
+export interface ProcessLLMUnifiedOptions {
+  task: TaskType; // "text", "image_description" o "ocr"
+  input_text?: string;
+  file_url?: string;
+  model: string;
+  temperature: number;
+  //max_tokens: number;
+  ocr_method?: OCRMethod; // "tesseract" o "llm", solo para task "ocr"
+  prompt?: string;
+}
+
 class CategorizerAPI {
   private baseUrl: string;
   private headers: Record<string, string>;
 
   constructor() {
+    // Se utiliza NEXT_PUBLIC_CATEGORIZER_URL para establecer la URL base del API.
     this.baseUrl = process.env.NEXT_PUBLIC_CATEGORIZER_URL + "/api" || "";
     this.headers = {
       "Content-Type": "application/json",
@@ -91,49 +103,31 @@ class CategorizerAPI {
     }
   }
 
-  async processFileWithLLM(
-    filePath: string,
-    options: ProcessLLMOptions
+  /**
+   * Método unificado para procesar entradas con el LLM.
+   * Se utiliza para:
+   * - Procesar texto: task="text" y se debe enviar input_text.
+   * - Describir imágenes: task="image_description" y se debe enviar file_url.
+   * - Realizar OCR: task="ocr" y se debe enviar file_url, además de ocr_method ("tesseract" o "llm").
+   */
+  async processLLM(
+    options: ProcessLLMUnifiedOptions
   ): Promise<ProcessLLMResult> {
     try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/process/llm`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ filePath, options }),
-        }
-      );
+      const response = await fetch(`${this.baseUrl}/llm/process`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...this.headers,
+        },
+        body: JSON.stringify(options),
+      });
       if (!response.ok) {
         throw new Error(`Error: ${response.status}`);
       }
       return await response.json();
     } catch (error) {
-      console.error("Error en processFileWithLLM:", error);
-      throw error;
-    }
-  }
-
-  async processImageWithOCR(filePath: string): Promise<OCRResult> {
-    try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/process/ocr`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ filePath }),
-        }
-      );
-      if (!response.ok) {
-        throw new Error(`Error: ${response.status}`);
-      }
-      return await response.json();
-    } catch (error) {
-      console.error("Error en processImageWithOCR:", error);
+      console.error("Error in processLLM:", error);
       throw error;
     }
   }
@@ -146,6 +140,7 @@ class CategorizerAPI {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            ...this.headers,
           },
           body: JSON.stringify({ metadata }),
         }
@@ -154,7 +149,7 @@ class CategorizerAPI {
         throw new Error(`Error: ${response.status}`);
       }
     } catch (error) {
-      console.error("Error en saveFilesMetadata:", error);
+      console.error("Error in saveFilesMetadata:", error);
       throw error;
     }
   }

@@ -5,23 +5,36 @@ import { useFileStore } from "../store/filestore";
 import { TitleComponent } from "../components/TitleComponent/TtitleComponent";
 import { ButtonLink } from "../components/ButtonLink/ButtonLink";
 import BrutalButton from "../components/ButtonComponent/ButtonComponent";
-import categorizerAPI from "../utils/categorizerAPI";
+import categorizerAPI, {
+  OCRMethod,
+  ProcessingMethod,
+  TaskType,
+} from "../utils/categorizerAPI";
 import { FileList } from "../components/ComplexComponents/FileList";
 import { FilePreview } from "../components/ComplexComponents/FilePreview";
 import { ProcessOptions } from "../components/ComplexComponents/ProcessOptions";
 import { MetadataForm } from "../components/ComplexComponents/MetadataForm";
+import { useConfigStore } from "../store/configStore";
 
 export type FileMetadata = {
   id: string;
   author?: string;
   title?: string;
-  description?: string;
+  content?: string; // <-- Renombrado (antes era description)
+  sentiment?: string; // <-- Nuevo campo
   tags: string[];
   sourceType?: string;
   extractedText?: string;
   processingStatus: "pending" | "processing" | "completed" | "failed";
-  processingMethod?: "manual" | "llm" | "ocr";
+  processingMethod?: ProcessingMethod;
+  llmErrorResponse?: string;
 };
+
+// Función auxiliar para unir los tags del usuario con los del LLM
+function mergeTags(userTags: string[], llmTags: string[] = []): string[] {
+  const set = new Set([...userTags, ...llmTags]);
+  return Array.from(set);
+}
 
 export default function ProcessFiles() {
   const { getSelectedFiles } = useFileStore();
@@ -31,26 +44,25 @@ export default function ProcessFiles() {
   >({});
   const [currentFileId, setCurrentFileId] = useState<string | null>(null);
 
+  // Agregamos el nuevo campo sentiment a autoFields
   const [autoFields, setAutoFields] = useState({
     author: false,
     title: false,
-    description: false,
+    content: false,
     tags: false,
+    sentiment: false,
   });
 
+  const { allModels, getModelsByGroup } = useConfigStore();
   const [llmConfig, setLlmConfig] = useState({
-    model: "gpt-3.5-turbo",
+    model: "deepseek-r1:32b",
     temperature: 0.7,
-    maxTokens: 2000,
   });
-
   const [isProcessing, setIsProcessing] = useState(false);
 
-  // Opciones de modelos para el dropdown
   const llmModelOptions = [
-    { label: "GPT-3.5 Turbo", value: "gpt-3.5-turbo" },
-    { label: "GPT-4", value: "gpt-4" },
-    { label: "Davinci", value: "text-davinci-003" },
+    ...getModelsByGroup("Text Generation Models"),
+    ...getModelsByGroup("Vision Models"),
   ];
 
   useEffect(() => {
@@ -63,6 +75,7 @@ export default function ProcessFiles() {
       };
     });
     setFileMetadata(initialMetadata);
+
     if (files.length > 0) {
       setCurrentFileId(files[0].original_name);
     }
@@ -111,73 +124,106 @@ export default function ProcessFiles() {
     }));
   };
 
-  const processWithLLM = async () => {
+  /**
+   * Función genérica para procesar con LLM (ya sea OCR, descripción de imagen, texto, etc.)
+   * Decide cómo rellenar los metadatos según autoFields.
+   */
+  const processWithLLMUnified = async (
+    taskType: TaskType = "image_description",
+    ocrMethod: OCRMethod = "tesseract"
+  ) => {
     const currentFile = getCurrentFile();
     if (!currentFile) return;
+    const existingMetadata = getCurrentFileMetadata();
+    if (!existingMetadata) return;
 
     setIsProcessing(true);
     updateCurrentFileMetadata({
       processingStatus: "processing",
-      processingMethod: "llm",
+      processingMethod: taskType as ProcessingMethod,
+      llmErrorResponse: "", // Limpiar el campo antes de la llamada
     });
 
     try {
-      const result = await categorizerAPI.processFileWithLLM(
-        currentFile.file_url!,
-        {
-          extractAuthor: autoFields.author,
-          extractTitle: autoFields.title,
-          extractDescription: autoFields.description,
-          extractTags: autoFields.tags,
+      let result;
+      if (taskType === "ocr") {
+        result = await categorizerAPI.processLLM({
+          task: "ocr",
+          file_url: currentFile.file_url,
           model: llmConfig.model,
           temperature: llmConfig.temperature,
-          maxTokens: llmConfig.maxTokens,
-        }
-      );
+          ocr_method: ocrMethod,
+          prompt: "",
+        });
+      } else if (taskType === "image_description") {
+        result = await categorizerAPI.processLLM({
+          task: "image_description",
+          file_url: currentFile.file_url,
+          model: llmConfig.model,
+          temperature: llmConfig.temperature,
+          prompt: "",
+        });
+      } else if (taskType === "text") {
+        result = await categorizerAPI.processLLM({
+          task: "text",
+          input_text: "Default text prompt",
+          model: llmConfig.model,
+          temperature: llmConfig.temperature,
+        });
+      }
 
-      updateCurrentFileMetadata({
-        author: result.author,
-        title: result.title,
-        description: result.description,
-        tags: result.tags || [],
-        extractedText: result.extractedText,
-        processingStatus: "completed",
-      });
+      if (result) {
+        console.log(result);
+        // Si la respuesta trae un error, actualizamos el campo de error y marcamos el estado como "failed".
+        if (result.error) {
+          updateCurrentFileMetadata({
+            processingStatus: "failed",
+            llmErrorResponse: result.raw || result.raw_analysis || "",
+          });
+          alert("Ocurrió un error al procesar el archivo con LLM.");
+        } else {
+          // Si la respuesta es correcta, asumimos que el LLM devuelve un array con un objeto JSON.
+          const llmData = result;
+          updateCurrentFileMetadata({
+            author: autoFields.author
+              ? llmData.author
+              : existingMetadata.author,
+            title: autoFields.title ? llmData.title : existingMetadata.title,
+            content: autoFields.content
+              ? llmData.content
+              : existingMetadata.content,
+            // sentiment: autoFields.sentiment
+            //   ? llmData.sentiment
+            //   : existingMetadata.sentiment,
+            tags: autoFields.tags
+              ? mergeTags(existingMetadata.tags, llmData.tags)
+              : existingMetadata.tags,
+            extractedText: llmData.content || existingMetadata.extractedText,
+            processingStatus: "completed",
+            llmErrorResponse: "", // Limpiar en caso de éxito
+          });
+        }
+      }
     } catch (error) {
-      console.error("Error LLM:", error);
-      updateCurrentFileMetadata({ processingStatus: "failed" });
+      console.error("Error en LLM Unified:", error);
+      updateCurrentFileMetadata({
+        processingStatus: "failed",
+        llmErrorResponse: String(error),
+      });
       alert("Ocurrió un error al procesar el archivo con LLM.");
     } finally {
       setIsProcessing(false);
     }
   };
 
+  // Procesos específicos (puedes eliminarlos si siempre usarás processWithLLMUnified)
+  const processWithLLM = async () => {
+    // Ejemplo: procesar como "image_description"
+    processWithLLMUnified("image_description");
+  };
+
   const processWithOCR = async () => {
-    const currentFile = getCurrentFile();
-    if (!currentFile) return;
-
-    setIsProcessing(true);
-    updateCurrentFileMetadata({
-      processingStatus: "processing",
-      processingMethod: "ocr",
-    });
-
-    try {
-      const result = await categorizerAPI.processImageWithOCR(
-        currentFile.file_url!
-      );
-
-      updateCurrentFileMetadata({
-        extractedText: result.text,
-        processingStatus: "completed",
-      });
-    } catch (error) {
-      console.error("Error OCR:", error);
-      updateCurrentFileMetadata({ processingStatus: "failed" });
-      alert("Ocurrió un error al procesar la imagen con OCR.");
-    } finally {
-      setIsProcessing(false);
-    }
+    processWithLLMUnified("ocr", "tesseract");
   };
 
   const saveAllMetadata = async () => {
@@ -194,6 +240,7 @@ export default function ProcessFiles() {
     }
   };
 
+  // Manejo de checkboxes para "auto"
   const toggleAutoField = (field: string) => {
     setAutoFields((prev) => ({
       ...prev,
@@ -201,6 +248,7 @@ export default function ProcessFiles() {
     }));
   };
 
+  // Manejo de tags
   const addTag = (tag: string) => {
     if (!currentFileId || !tag.trim()) return;
     setFileMetadata((prev) => {
@@ -290,6 +338,17 @@ export default function ProcessFiles() {
                   addTag={addTag}
                   removeTag={removeTag}
                 />
+                {currentFileId &&
+                  fileMetadata[currentFileId]?.llmErrorResponse && (
+                    <div className="mt-4 p-4 border-4 border-red-600 rounded-lg bg-red-100">
+                      <h4 className="text-lg font-bold">
+                        Respuesta incompleta del LLM
+                      </h4>
+                      <pre className="whitespace-pre-wrap text-sm">
+                        {fileMetadata[currentFileId].llmErrorResponse}
+                      </pre>
+                    </div>
+                  )}
               </div>
             </div>
           )}

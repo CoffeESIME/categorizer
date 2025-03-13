@@ -8,5 +8,47 @@
     "language": "spa",
     "psm": 3,
     "apply_otsu": false
-  }
+  },
+  "all_models": [
+    {
+      "groupName": "Text Embedding Models",
+      "models": [
+        { "label": "Granite Embeddings", "value": "granite-embedding:latest" },
+        { "label": "Nomic Embed Text", "value": "nomic-embed-text:latest" }
+      ]
+    },
+    {
+      "groupName": "Vision Models",
+      "models": [
+        { "label": "Granite 3.2 Vision", "value": "granite3.2-vision:latest" },
+        { "label": "LLaVA 34B (Multimodal)", "value": "llava:34b" }
+      ]
+    },
+    {
+      "groupName": "Text Analysis/Security",
+      "models": [
+        { "label": "Granite 3 Guardian", "value": "granite3-guardian:latest" },
+        { "label": "Granite 3 Dense 8B", "value": "granite3-dense:8b" }
+      ]
+    },
+    {
+      "groupName": "Text Generation Models",
+      "models": [
+        { "label": "DeepSeek R1 32B", "value": "deepseek-r1:32b" },
+        { "label": "DeepSeek R1 70B", "value": "deepseek-r1:70b" },
+        { "label": "DeepSeek R1 14B", "value": "deepseek-r1:14b" },
+        { "label": "Llama 3.3", "value": "llama3.3:latest" }
+      ]
+    },
+    {
+      "groupName": "Code Models",
+      "models": [
+        { "label": "DeepSeek Coder v2", "value": "deepseek-coder-v2:latest" }
+      ]
+    },
+    {
+      "groupName": "General Purpose/Text Processing",
+      "models": [{ "label": "DeepScaler", "value": "deepscaler:latest" }]
+    }
+  ]
 }
