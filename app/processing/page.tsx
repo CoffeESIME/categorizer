@@ -1,5 +1,4 @@
 "use client";
-
 import React, { useState, useEffect } from "react";
 import { useFileStore } from "../store/filestore";
 import { TitleComponent } from "../components/TitleComponent/TtitleComponent";
@@ -20,20 +19,51 @@ export type FileMetadata = {
   id: string;
   author?: string;
   title?: string;
-  content?: string; // <-- Renombrado (antes era description)
-  sentiment?: string; // <-- Nuevo campo
+  content?: string;
   tags: string[];
   sourceType?: string;
   extractedText?: string;
   processingStatus: "pending" | "processing" | "completed" | "failed";
   processingMethod?: ProcessingMethod;
   llmErrorResponse?: string;
+  work?: string;
+  languages?: string[];
+  sentiment_word?: string;
+  sentiment_value?: number;
+  analysis?: string;
+  categories?: string[];
+  keywords?: string[];
+  content_type?: string;
+  multilingual?: boolean;
+  description?: string;
+  topics?: string[];
+  style?: string;
+  color_palette?: string[];
+  composition?: string;
+  file_type?: string;
 };
 
-// Función auxiliar para unir los tags del usuario con los del LLM
-function mergeTags(userTags: string[], llmTags: string[] = []): string[] {
-  const set = new Set([...userTags, ...llmTags]);
-  return Array.from(set);
+interface AutoFields {
+  [key: string]: boolean;
+  author: boolean;
+  title: boolean;
+  content: boolean;
+  tags: boolean;
+  sentiment: boolean;
+  description: boolean;
+  topics: boolean;
+  style: boolean;
+  color_palette: boolean;
+  composition: boolean;
+}
+function hasMetadata(file: FileMetadata): boolean {
+  return (
+    file.processingMethod !== undefined ||
+    (file.content !== undefined && file.content.trim() !== "") ||
+    (file.analysis !== undefined && file.analysis.trim() !== "") ||
+    (file.categories !== undefined && file.categories.length > 0) ||
+    (file.keywords !== undefined && file.keywords.length > 0)
+  );
 }
 
 export default function ProcessFiles() {
@@ -44,18 +74,22 @@ export default function ProcessFiles() {
   >({});
   const [currentFileId, setCurrentFileId] = useState<string | null>(null);
 
-  // Agregamos el nuevo campo sentiment a autoFields
-  const [autoFields, setAutoFields] = useState({
-    author: false,
-    title: false,
-    content: false,
-    tags: false,
-    sentiment: false,
+  const [autoFields, setAutoFields] = useState<AutoFields>({
+    author: true,
+    title: true,
+    content: true,
+    tags: true,
+    sentiment: true,
+    description: true,
+    topics: true,
+    style: true,
+    color_palette: true,
+    composition: true,
   });
 
-  const { allModels, getModelsByGroup } = useConfigStore();
+  const { getModelsByGroup } = useConfigStore();
   const [llmConfig, setLlmConfig] = useState({
-    model: "deepseek-r1:32b",
+    model: "deepseek-r1:14b",
     temperature: 0.7,
   });
   const [isProcessing, setIsProcessing] = useState(false);
@@ -64,6 +98,25 @@ export default function ProcessFiles() {
     ...getModelsByGroup("Text Generation Models"),
     ...getModelsByGroup("Vision Models"),
   ];
+
+  const mergeField = (
+    existing: string | undefined,
+    newValue: string | undefined
+  ): string => {
+    if (existing && newValue) {
+      return `${existing} ${newValue}`.trim();
+    }
+    return newValue || existing || "";
+  };
+
+  const mergeArrayField = (
+    existing: string[] | undefined,
+    newValue: string[] | undefined
+  ): string[] => {
+    const existingArr = existing || [];
+    const newArr = newValue || [];
+    return Array.from(new Set([...existingArr, ...newArr]));
+  };
 
   useEffect(() => {
     const initialMetadata: Record<string, FileMetadata> = {};
@@ -86,7 +139,15 @@ export default function ProcessFiles() {
       ? files.find((f) => f.original_name === currentFileId)
       : null;
   };
-
+  useEffect(() => {
+    if (currentFileId !== null) {
+      updateCurrentFileMetadata({
+        file_type: getMainFileType(
+          files.find((file) => file.original_name === currentFileId)
+        ),
+      });
+    }
+  }, [currentFileId]);
   const getCurrentFileMetadata = () => {
     return currentFileId ? fileMetadata[currentFileId] : null;
   };
@@ -99,7 +160,7 @@ export default function ProcessFiles() {
     const mainType = getMainFileType(file);
     switch (mainType) {
       case "image":
-        return ["ocr", "llm", "manual"];
+        return ["ocr", "image_description", "manual"];
       case "video":
       case "audio":
         return ["llm", "manual"];
@@ -112,7 +173,6 @@ export default function ProcessFiles() {
         return ["manual"];
     }
   };
-
   const updateCurrentFileMetadata = (updates: Partial<FileMetadata>) => {
     if (!currentFileId) return;
     setFileMetadata((prev) => ({
@@ -123,11 +183,6 @@ export default function ProcessFiles() {
       },
     }));
   };
-
-  /**
-   * Función genérica para procesar con LLM (ya sea OCR, descripción de imagen, texto, etc.)
-   * Decide cómo rellenar los metadatos según autoFields.
-   */
   const processWithLLMUnified = async (
     taskType: TaskType = "image_description",
     ocrMethod: OCRMethod = "tesseract"
@@ -141,7 +196,7 @@ export default function ProcessFiles() {
     updateCurrentFileMetadata({
       processingStatus: "processing",
       processingMethod: taskType as ProcessingMethod,
-      llmErrorResponse: "", // Limpiar el campo antes de la llamada
+      llmErrorResponse: "",
     });
 
     try {
@@ -173,8 +228,6 @@ export default function ProcessFiles() {
       }
 
       if (result) {
-        console.log(result);
-        // Si la respuesta trae un error, actualizamos el campo de error y marcamos el estado como "failed".
         if (result.error) {
           updateCurrentFileMetadata({
             processingStatus: "failed",
@@ -182,26 +235,75 @@ export default function ProcessFiles() {
           });
           alert("Ocurrió un error al procesar el archivo con LLM.");
         } else {
-          // Si la respuesta es correcta, asumimos que el LLM devuelve un array con un objeto JSON.
           const llmData = result;
-          updateCurrentFileMetadata({
-            author: autoFields.author
-              ? llmData.author
-              : existingMetadata.author,
-            title: autoFields.title ? llmData.title : existingMetadata.title,
-            content: autoFields.content
-              ? llmData.content
-              : existingMetadata.content,
-            // sentiment: autoFields.sentiment
-            //   ? llmData.sentiment
-            //   : existingMetadata.sentiment,
-            tags: autoFields.tags
-              ? mergeTags(existingMetadata.tags, llmData.tags)
-              : existingMetadata.tags,
-            extractedText: llmData.content || existingMetadata.extractedText,
-            processingStatus: "completed",
-            llmErrorResponse: "", // Limpiar en caso de éxito
-          });
+          if (taskType === "ocr") {
+            updateCurrentFileMetadata({
+              title: autoFields.title
+                ? mergeField(existingMetadata.title, llmData.title)
+                : existingMetadata.title,
+              author: autoFields.author
+                ? mergeField(existingMetadata.author, llmData.author)
+                : existingMetadata.author,
+              content: autoFields.content
+                ? mergeField(existingMetadata.content, llmData.content)
+                : existingMetadata.content,
+              tags: autoFields.tags
+                ? mergeArrayField(existingMetadata.tags, llmData.tags)
+                : existingMetadata.tags,
+              sentiment_word: autoFields.sentiment
+                ? mergeField(
+                    existingMetadata.sentiment_word,
+                    llmData.sentiment_word
+                  )
+                : existingMetadata.sentiment_word,
+              // Otros campos se actualizan directamente sin condicional
+              work: llmData.work,
+              languages: llmData.languages,
+              sentiment_value: llmData.sentiment_value,
+              analysis: llmData.analysis,
+              categories: llmData.categories,
+              keywords: llmData.keywords,
+              content_type: llmData.content_type,
+              multilingual: llmData.multilingual,
+              processingStatus: "completed",
+              llmErrorResponse: "",
+            });
+          } else if (taskType === "image_description") {
+            updateCurrentFileMetadata({
+              description: autoFields.description
+                ? mergeField(existingMetadata.description, llmData.description)
+                : existingMetadata.description,
+              tags: autoFields.tags
+                ? mergeArrayField(existingMetadata.tags, llmData.tags)
+                : existingMetadata.tags,
+              topics: autoFields.topics
+                ? mergeArrayField(existingMetadata.topics, llmData.topics)
+                : existingMetadata.topics,
+              style: autoFields.style
+                ? mergeField(existingMetadata.style, llmData.style)
+                : existingMetadata.style,
+              color_palette: autoFields.color_palette
+                ? mergeArrayField(
+                    existingMetadata.color_palette,
+                    llmData.color_palette
+                  )
+                : existingMetadata.color_palette,
+              composition: autoFields.composition
+                ? mergeField(existingMetadata.composition, llmData.composition)
+                : existingMetadata.composition,
+              processingStatus: "completed",
+              llmErrorResponse: "",
+            });
+          } else {
+            // Para otros taskTypes, por ejemplo, "text":
+            updateCurrentFileMetadata({
+              content: autoFields.content
+                ? mergeField(existingMetadata.content, llmData.content)
+                : existingMetadata.content,
+              processingStatus: "completed",
+              llmErrorResponse: "",
+            });
+          }
         }
       }
     } catch (error) {
@@ -216,12 +318,9 @@ export default function ProcessFiles() {
     }
   };
 
-  // Procesos específicos (puedes eliminarlos si siempre usarás processWithLLMUnified)
   const processWithLLM = async () => {
-    // Ejemplo: procesar como "image_description"
     processWithLLMUnified("image_description");
   };
-
   const processWithOCR = async () => {
     processWithLLMUnified("ocr", "tesseract");
   };
@@ -230,8 +329,9 @@ export default function ProcessFiles() {
     setIsProcessing(true);
     try {
       const allMetadata = Object.values(fileMetadata);
+      const filesWithMetadata = allMetadata.filter(hasMetadata);
+      console.log("all metadata", allMetadata, filesWithMetadata);
       await categorizerAPI.saveFilesMetadata(allMetadata);
-      alert("Metadatos guardados correctamente!");
     } catch (error) {
       console.error("Error al guardar metadatos:", error);
       alert("Error guardando metadatos. Intenta nuevamente.");
@@ -240,7 +340,6 @@ export default function ProcessFiles() {
     }
   };
 
-  // Manejo de checkboxes para "auto"
   const toggleAutoField = (field: string) => {
     setAutoFields((prev) => ({
       ...prev,
@@ -248,7 +347,6 @@ export default function ProcessFiles() {
     }));
   };
 
-  // Manejo de tags
   const addTag = (tag: string) => {
     if (!currentFileId || !tag.trim()) return;
     setFileMetadata((prev) => {
@@ -327,13 +425,12 @@ export default function ProcessFiles() {
                   setLlmConfig={setLlmConfig}
                   llmModelOptions={llmModelOptions}
                   getProcessingOptions={getProcessingOptions}
+                  updateMetadata={updateCurrentFileMetadata}
                 />
               </div>
               <div>
                 <MetadataForm
                   metadata={getCurrentFileMetadata()}
-                  autoFields={autoFields}
-                  toggleAutoField={toggleAutoField}
                   updateMetadata={updateCurrentFileMetadata}
                   addTag={addTag}
                   removeTag={removeTag}

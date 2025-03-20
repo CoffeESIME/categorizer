@@ -2,8 +2,9 @@
 import { CategoryButton } from "./components/LinkButton";
 import { Marquee } from "./components/MarqueeComponent/MarqueeComponent";
 import { Badge } from "./components/BadgeComponent/BadgeComponent";
-import React from "react";
+import React, { useEffect } from "react";
 import { TitleComponent } from "./components/TitleComponent/TtitleComponent";
+import categorizerAPI from "./utils/categorizerAPI";
 export default function Home() {
   const marqueeOptions = [
     "Organize",
@@ -15,6 +16,17 @@ export default function Home() {
     "Intelligent Mapping",
     "Organize",
   ];
+  useEffect(() => {
+    async function fetchUnconnectedNodes() {
+      try {
+        const nodes = await categorizerAPI.getUnconnectedNodes();
+        console.log("Unconnected nodes:", nodes);
+      } catch (error) {
+        console.error("Error fetching unconnected nodes:", error);
+      }
+    }
+    fetchUnconnectedNodes();
+  }, []);
   return (
     <main className="container mx-auto p-4 min-h-screen flex flex-col items-center justify-center bg-yellow-100">
       <TitleComponent title="Let's Categorize It" variant="red" />
@@ -27,6 +39,11 @@ export default function Home() {
         <CategoryButton
           href="/pending"
           label="Pendientes"
+          color="bg-blue-400"
+        />
+        <CategoryButton
+          href="/visualizer"
+          label="Visualization"
           color="bg-blue-400"
         />
       </div>

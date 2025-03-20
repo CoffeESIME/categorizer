@@ -17,7 +17,7 @@ export interface ButtonProps
   variant?: ButtonVariant;
 }
 
-export const CustomButton: React.FC<ButtonProps> = ({
+export const BrutalButton: React.FC<ButtonProps> = ({
   variant = "blue",
   children,
   disabled,
@@ -71,4 +71,4 @@ export const CustomButton: React.FC<ButtonProps> = ({
   );
 };
 
-export default CustomButton;
+export default BrutalButton;

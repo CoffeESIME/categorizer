@@ -81,6 +81,7 @@ export const useConfigStore = create<ConfigState>((set, get) => ({
       models: [
         { label: "Granite 3.2 Vision", value: "granite3.2-vision:latest" },
         { label: "LLaVA 34B (Multimodal)", value: "llava:34b" },
+        { label: "Gemma 3 (Multimodal)", value: "gemma3:latest" },
       ],
     },
     {
@@ -97,6 +98,8 @@ export const useConfigStore = create<ConfigState>((set, get) => ({
         { label: "DeepSeek R1 70B", value: "deepseek-r1:70b" },
         { label: "DeepSeek R1 14B", value: "deepseek-r1:14b" },
         { label: "Llama 3.3", value: "llama3.3:latest" },
+        { label: "DeepScaler", value: "deepscaler:latest" },
+        { label: "QWQ", value: "qwq:latest" },
       ],
     },
     {
