@@ -313,6 +313,20 @@ class CategorizerAPI {
       throw error;
     }
   }
+  async fetchNodesByType(nodeType: string): Promise<any> {
+    try {
+      const response = await axios.get(
+        `${this.baseUrl}/nodes/node-types/${nodeType}`,
+        {
+          headers: this.headers,
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching nodes by type", error);
+      throw error;
+    }
+  }
 }
 
 const categorizerAPI = new CategorizerAPI();

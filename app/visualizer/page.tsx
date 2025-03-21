@@ -32,16 +32,12 @@ export interface DocumentNode {
   topics: string[] | null;
   style: string | null;
   labels: string[] | null;
+  id: string;
 }
 interface GraphEdge {
   source: string;
   target: string;
   relation: string;
-}
-
-interface GraphData {
-  nodes: DocumentNode[]; // o nodos heterogéneos si lo prefieres
-  edges: GraphEdge[];
 }
 
 type GraphMode = "unconnected" | "full";
