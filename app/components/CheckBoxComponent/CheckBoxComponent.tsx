@@ -4,15 +4,10 @@ import React, { useState } from "react";
 
 export interface CheckboxProps
   extends React.InputHTMLAttributes<HTMLInputElement> {
-  /** Texto opcional para mostrar al lado del checkbox */
   label?: string;
-  /** Valor inicial del checkbox */
   defaultChecked?: boolean;
-  /** Clases de Tailwind para el estilo base del checkbox */
   baseClassName?: string;
-  /** Clases para el estado "checked" */
   checkedStyle?: string;
-  /** Clases para el estado "unchecked" */
   uncheckedStyle?: string;
 }
 

@@ -1,24 +1,18 @@
 "use client";
-
 import React, { useState, useEffect } from "react";
 import { DocumentNode } from "@/app/types/nodeTypes";
-
-// Custom components
 import BrutalDropDown from "../DropDownComponent/DropdownComponent";
 import { BrutalInput } from "../InputComponent/InputComponent";
 import { BrutalButton } from "../ButtonComponent/ButtonComponent";
 import CustomCheckbox from "../CheckBoxComponent/CheckBoxComponent";
 import BrutalSearchSelect from "../BurtalSearchSelectComponent/BrutalSearchComponent";
 import categorizerAPI from "@/app/utils/categorizerAPI";
-
-// Tipado para la configuración de cada campo
 export interface UpdateFieldConfig {
   name: string;
   label: string;
   type: "text" | "date" | "number" | "checkbox" | "textarea";
 }
 
-// Configuración para formularios de actualización
 const updateFormConfig: Record<string, UpdateFieldConfig[]> = {
   default: [
     { name: "title", label: "Título", type: "text" },
@@ -83,7 +77,6 @@ const updateFormConfig: Record<string, UpdateFieldConfig[]> = {
   ],
 };
 
-// Mapeo de tipo de nodo a campo de búsqueda
 const searchFieldMapping: Record<string, string> = {
   author: "name",
   image: "title",
@@ -96,7 +89,6 @@ const searchFieldMapping: Record<string, string> = {
   language: "name",
 };
 
-// Incluimos la opción "Ninguno" para que el usuario tenga que elegir explícitamente
 const nodeTypeOptions = [
   { value: "", label: "Ninguno" },
   { value: "author", label: "Author" },
@@ -110,7 +102,6 @@ const nodeTypeOptions = [
   { value: "language", label: "Language" },
 ];
 
-// Tipado de props para el NodeDetailsPanel
 interface NodeDetailsPanelProps {
   selectedNode: DocumentNode | null;
   onClose: () => void;
@@ -122,7 +113,6 @@ export const NodeDetailsPanel: React.FC<NodeDetailsPanelProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState<"update" | "connect">("update");
 
-  // Estado para manejar nodos conectados y posibles conexiones
   const [currentConnections, setCurrentConnections] = useState<DocumentNode[]>(
     []
   );
@@ -130,10 +120,8 @@ export const NodeDetailsPanel: React.FC<NodeDetailsPanelProps> = ({
     DocumentNode[]
   >([]);
 
-  // Estado para el tipo de nodo a conectar
   const [selectedConnectionType, setSelectedConnectionType] =
     useState<string>("");
-  // Estados para almacenar el id del nodo seleccionado y el valor que se muestra en el input de búsqueda
   const [selectedConnectionId, setSelectedConnectionId] = useState<
     string | null
   >(null);
@@ -172,7 +160,6 @@ export const NodeDetailsPanel: React.FC<NodeDetailsPanelProps> = ({
         labels: Array.isArray(selectedNode.labels)
           ? selectedNode.labels.join(", ")
           : selectedNode.labels || "",
-        // Se utiliza el campo id (uuid) del nodo
         id: selectedNode.id || "",
       });
       // Aquí se podrían cargar las conexiones existentes
@@ -206,7 +193,7 @@ export const NodeDetailsPanel: React.FC<NodeDetailsPanelProps> = ({
     setSelectedConnectionId(null);
     setSelectedConnectionDisplay("");
     setPossibleConnections([]);
-    if (!nodeType) return; // Si "Ninguno" es seleccionado, no hacemos la llamada.
+    if (!nodeType) return;
     try {
       const results = await categorizerAPI.fetchNodesByType(nodeType);
       setPossibleConnections(results);
@@ -241,7 +228,6 @@ export const NodeDetailsPanel: React.FC<NodeDetailsPanelProps> = ({
     selectedConnectionDisplay,
     selectedConnectionId
   );
-  // Determinar el campo de búsqueda según el tipo seleccionado.
   const searchField = searchFieldMapping[selectedConnectionType] || "title";
 
   return (
@@ -257,7 +243,6 @@ export const NodeDetailsPanel: React.FC<NodeDetailsPanelProps> = ({
           </button>
         </div>
 
-        {/* Sección de detalle de campos */}
         <div className="mb-4">
           {formatField("ID", selectedNode.id)}
           {currentFormFields.map((field) => {
@@ -266,7 +251,6 @@ export const NodeDetailsPanel: React.FC<NodeDetailsPanelProps> = ({
           })}
         </div>
 
-        {/* Pestañas Actualizar / Conectar */}
         <div className="flex mb-4">
           <button
             className={`flex-1 p-2 border-b-2 ${
@@ -354,7 +338,6 @@ export const NodeDetailsPanel: React.FC<NodeDetailsPanelProps> = ({
               </div>
             )}
 
-            {/* Selección del tipo de nodo a conectar */}
             <div>
               <label className="font-bold block mb-1">
                 Tipo de nodo a conectar:
@@ -370,7 +353,6 @@ export const NodeDetailsPanel: React.FC<NodeDetailsPanelProps> = ({
               />
             </div>
 
-            {/* Si se eligió un tipo, mostrar búsqueda */}
             {selectedConnectionType && (
               <div>
                 <label className="font-bold block mb-1">

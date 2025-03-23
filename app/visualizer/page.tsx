@@ -12,14 +12,10 @@ import {
 } from "../components/Graph/NodeForm";
 import { FilterForm } from "../components/Graph/FilterForm";
 import { Modal } from "../components/Modal/Modal";
-
-// HOOKS de visualización de grafos
-import { useDocumentGraph } from "../lib/useDocumentGraph"; // Ya existente para "unconnected nodes"
-import { useHeterogeneousGraph } from "../lib/useHeterogeneousGraph"; // Nuevo para grafos con diferentes tipos de nodos
+import { useDocumentGraph } from "../lib/useDocumentGraph";
+import { useHeterogeneousGraph } from "../lib/useHeterogeneousGraph";
 import { DocumentNode } from "../types/nodeTypes";
 import { GraphEdge } from "../types/graphTypes";
-// Tipos para nodos y aristas
-
 type GraphMode = "unconnected" | "full";
 
 export default function DocumentGraphVisualization() {
@@ -36,7 +32,6 @@ export default function DocumentGraphVisualization() {
   // "unconnected" data
   const [unconnectedNodes, setUnconnectedNodes] = useState<DocumentNode[]>([]);
 
-  // "full" graph data
   // Podrías tener un tipo genérico si hay nodos que no tienen doc_id
   // En este ejemplo asumimos que igual usas DocumentNode, con edges
   const [fullGraphNodes, setFullGraphNodes] = useState<DocumentNode[]>([]);
@@ -46,7 +41,6 @@ export default function DocumentGraphVisualization() {
   // 2. Llamadas al backend
   // ---------------------------------------------------------------------
 
-  // Cargar nodos desconectados
   async function loadUnconnectedNodes() {
     try {
       setLoading(true);
@@ -60,13 +54,10 @@ export default function DocumentGraphVisualization() {
     }
   }
 
-  // Cargar grafo completo
   async function loadFullGraph() {
     try {
       setLoading(true);
       const allData = await categorizerAPI.fetchGraphData();
-      // asumiendo que fetchGraphData retorna { nodes: [...], edges: [...] }
-      // y que sus nodos sí tienen doc_id o id
       setFullGraphNodes(allData.nodes);
       setFullGraphEdges(allData.edges);
     } catch (error) {
@@ -111,10 +102,6 @@ export default function DocumentGraphVisualization() {
       setSelectedNode(nodeData as DocumentNode);
     },
   });
-
-  // ---------------------------------------------------------------------
-  // 5. Handlers de UI
-  // ---------------------------------------------------------------------
   const handleAddNode = () => {
     setIsAddNodeModalOpen(true);
   };
@@ -123,7 +110,6 @@ export default function DocumentGraphVisualization() {
     try {
       await categorizerAPI.createNode(data);
       setIsAddNodeModalOpen(false);
-      // Recargamos el modo actual
       if (graphMode === "unconnected") {
         loadUnconnectedNodes();
       } else {
@@ -140,7 +126,6 @@ export default function DocumentGraphVisualization() {
   };
 
   const handleModeSwitch = () => {
-    // Alternar modo "unconnected" <-> "full"
     setGraphMode((prev) => (prev === "unconnected" ? "full" : "unconnected"));
   };
 

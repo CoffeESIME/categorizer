@@ -18,10 +18,6 @@ export interface BrutalSearchSelectProps {
   className?: string;
 }
 
-/**
- * Select con estilo neobrutalista que incluye un input de búsqueda
- * para filtrar las opciones disponibles en tiempo real.
- */
 const BrutalSearchSelect: React.FC<BrutalSearchSelectProps> = ({
   options,
   onSelect,
@@ -31,8 +27,6 @@ const BrutalSearchSelect: React.FC<BrutalSearchSelectProps> = ({
   className = "",
 }) => {
   const [searchQuery, setSearchQuery] = React.useState("");
-
-  // Filtramos las opciones según el texto ingresado.
   const filteredOptions = React.useMemo(() => {
     return options.filter((opt) =>
       opt.label.toLowerCase().includes(searchQuery.toLowerCase())

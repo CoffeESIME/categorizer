@@ -76,8 +76,6 @@ export const MetadataForm: React.FC<MetadataFormProps> = ({
     return (
       <div className="space-y-4 border-4 border-black rounded-lg p-4 bg-white">
         <h3 className="text-xl font-bold">Metadatos OCR</h3>
-
-        {/* Title */}
         <div>
           <label className="font-bold">Título</label>
           <BrutalInput
@@ -88,8 +86,6 @@ export const MetadataForm: React.FC<MetadataFormProps> = ({
             className="w-full p-2 border-4 border-black rounded-lg"
           />
         </div>
-
-        {/* Author */}
         <div>
           <label className="font-bold">Autor</label>
           <BrutalInput
@@ -100,8 +96,6 @@ export const MetadataForm: React.FC<MetadataFormProps> = ({
             className="w-full p-2 border-4 border-black rounded-lg"
           />
         </div>
-
-        {/* Tags */}
         <div>
           <label className="font-bold">Tags</label>
           {renderTagSection(metadata.tags || [], addTag, removeTag)}
@@ -130,7 +124,6 @@ export const MetadataForm: React.FC<MetadataFormProps> = ({
             className="w-full p-2 border-4 border-black rounded-lg"
           />
         </div>
-
         <div>
           <label className="font-bold">Sentiment Word</label>
           <BrutalInput
@@ -156,8 +149,6 @@ export const MetadataForm: React.FC<MetadataFormProps> = ({
             className="w-full p-2 border-4 border-black rounded-lg"
           />
         </div>
-
-        {/* analysis */}
         <div>
           <label className="font-bold">Analysis</label>
           <BrutalInput
@@ -169,8 +160,6 @@ export const MetadataForm: React.FC<MetadataFormProps> = ({
             multiline
           />
         </div>
-
-        {/* categories */}
         <div>
           <label className="font-bold">Categorías</label>
           <BrutalInput
@@ -185,8 +174,6 @@ export const MetadataForm: React.FC<MetadataFormProps> = ({
             className="w-full p-2 border-4 border-black rounded-lg"
           />
         </div>
-
-        {/* keywords */}
         <div>
           <label className="font-bold">Keywords</label>
           <BrutalInput
@@ -201,8 +188,6 @@ export const MetadataForm: React.FC<MetadataFormProps> = ({
             className="w-full p-2 border-4 border-black rounded-lg"
           />
         </div>
-
-        {/* content_type */}
         <div>
           <label className="font-bold">Tipo de contenido (content_type)</label>
           <BrutalInput
@@ -213,8 +198,6 @@ export const MetadataForm: React.FC<MetadataFormProps> = ({
             className="w-full p-2 border-4 border-black rounded-lg"
           />
         </div>
-
-        {/* multilingual */}
         <div>
           <label className="font-bold">¿Multilingüe?</label>
           <input
@@ -224,8 +207,6 @@ export const MetadataForm: React.FC<MetadataFormProps> = ({
             className="ml-2"
           />
         </div>
-
-        {/* contentt (solo si multilingual es false) */}
         {!metadata.multilingual && (
           <div>
             <label className="font-bold">Contenido limpio (contentt)</label>
@@ -247,8 +228,6 @@ export const MetadataForm: React.FC<MetadataFormProps> = ({
     return (
       <div className="space-y-4 border-4 border-black rounded-lg p-4 bg-white">
         <h3 className="text-xl font-bold">Metadatos - Análisis de Imagen</h3>
-
-        {/* description */}
         <div>
           <label className="font-bold">Descripción (description)</label>
           <BrutalInput
@@ -259,15 +238,11 @@ export const MetadataForm: React.FC<MetadataFormProps> = ({
             className="w-full p-2 border-4 border-black rounded-lg h-32"
             multiline
           />
-        </div>
-
-        {/* tags */}
+        </div>{" "}
         <div>
           <label className="font-bold">Tags</label>
           {renderTagSection(metadata.tags || [], addTag, removeTag)}
         </div>
-
-        {/* topics */}
         <div>
           <label className="font-bold">Temas (topics)</label>
           <BrutalInput
@@ -282,8 +257,6 @@ export const MetadataForm: React.FC<MetadataFormProps> = ({
             className="w-full p-2 border-4 border-black rounded-lg"
           />
         </div>
-
-        {/* style */}
         <div>
           <label className="font-bold">Estilo (style)</label>
           <BrutalInput
@@ -294,8 +267,6 @@ export const MetadataForm: React.FC<MetadataFormProps> = ({
             className="w-full p-2 border-4 border-black rounded-lg h-32"
           />
         </div>
-
-        {/* color_palette */}
         <div>
           <label className="font-bold">Color Palette</label>
           <BrutalInput
@@ -310,8 +281,6 @@ export const MetadataForm: React.FC<MetadataFormProps> = ({
             className="w-full p-2 border-4 border-black rounded-lg"
           />
         </div>
-
-        {/* composition */}
         <div>
           <label className="font-bold">Composición (composition)</label>
           <BrutalInput
@@ -330,8 +299,6 @@ export const MetadataForm: React.FC<MetadataFormProps> = ({
   return (
     <div className="space-y-4 border-4 border-black rounded-lg p-4 bg-white">
       <h3 className="text-xl font-bold">Metadatos Generales / Manual</h3>
-
-      {/* AUTHOR */}
       <div>
         <label className="font-bold">Autor</label>
         <BrutalInput
@@ -343,7 +310,6 @@ export const MetadataForm: React.FC<MetadataFormProps> = ({
         />
       </div>
 
-      {/* TITLE */}
       <div>
         <label className="font-bold">Título</label>
         <BrutalInput
@@ -354,8 +320,6 @@ export const MetadataForm: React.FC<MetadataFormProps> = ({
           className="w-full p-2 border-4 border-black rounded-lg"
         />
       </div>
-
-      {/* CONTENT */}
       <div>
         <label className="font-bold">Contenido</label>
         <BrutalInput
@@ -368,7 +332,6 @@ export const MetadataForm: React.FC<MetadataFormProps> = ({
         />
       </div>
 
-      {/* SENTIMENT */}
       <div>
         <label className="font-bold">Sentimiento</label>
         <BrutalInput
@@ -380,13 +343,11 @@ export const MetadataForm: React.FC<MetadataFormProps> = ({
         />
       </div>
 
-      {/* TAGS */}
       <div>
         <label className="font-bold">Tags</label>
         {renderTagSection(metadata.tags || [], addTag, removeTag)}
       </div>
 
-      {/* Texto extraído (si aplica) */}
       {metadata.extractedText && (
         <div>
           <label className="font-bold">Texto Extraído</label>

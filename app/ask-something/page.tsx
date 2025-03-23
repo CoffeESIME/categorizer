@@ -15,7 +15,6 @@ interface ChatMessage {
 }
 
 export default function RagBrutalistChat() {
-  // Estados para la conversación
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       role: "system",
@@ -24,22 +23,16 @@ export default function RagBrutalistChat() {
   ]);
   const [userInput, setUserInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-
-  // Estados de configuración RAG
   const [model, setModel] = useState("gpt-3.5");
   const [temperature, setTemperature] = useState(0.7);
   const [retrievalMethod, setRetrievalMethod] = useState("vector");
   const [tools, setTools] = useState<string[]>([]);
   const [topK, setTopK] = useState(3);
   const [chunkSize, setChunkSize] = useState(512);
-
-  // Referencia para scroll automático en el chat
   const messagesEndRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
-
-  // Función para enviar mensaje al backend
   const handleSend = async () => {
     if (!userInput.trim()) return;
     setIsLoading(true);
@@ -83,8 +76,6 @@ export default function RagBrutalistChat() {
       setUserInput("");
     }
   };
-
-  // Función para alternar herramientas
   const toggleTool = (toolName: string) => {
     setTools((prev) =>
       prev.includes(toolName)
@@ -95,7 +86,6 @@ export default function RagBrutalistChat() {
 
   return (
     <div className="flex flex-col h-screen border-4 border-black bg-white text-black font-sans">
-      {/* Encabezado / Configuración */}
       <div className="p-4 border-b-4 border-black bg-white -rotate-1 transform origin-top-left">
         <div className="flex justify-between items-center">
           <TitleComponent title="Chat RAG Data" variant="neobrutalism" />
@@ -105,7 +95,6 @@ export default function RagBrutalistChat() {
         </div>
 
         <div className="flex flex-wrap gap-4 mt-4">
-          {/* Modelo */}
           <div className="flex flex-col border-4 border-black p-2 bg-pink-300 rounded-lg">
             <label className="font-bold mb-1">Modelo:</label>
             <BrutalDropDown
@@ -120,7 +109,6 @@ export default function RagBrutalistChat() {
               dropdownBgClass="bg-white"
             />
           </div>
-          {/* Temperatura */}
           <div className="flex flex-col border-4 border-black p-2 bg-yellow-300 rounded-lg">
             <label className="font-bold mb-1">Temperatura:</label>
             <BrutalInput
@@ -133,7 +121,6 @@ export default function RagBrutalistChat() {
               className="w-20 bg-white"
             />
           </div>
-          {/* Retrieval */}
           <div className="flex flex-col border-4 border-black p-2 bg-green-300 rounded-lg">
             <label className="font-bold mb-1">Retrieval:</label>
             <BrutalDropDown
@@ -148,7 +135,6 @@ export default function RagBrutalistChat() {
               dropdownBgClass="bg-white"
             />
           </div>
-          {/* Herramientas */}
           <div className="flex flex-col border-4 border-black p-2 bg-blue-300 rounded-lg">
             <label className="font-bold mb-1">Herramientas:</label>
             <div className="space-y-1">
@@ -164,7 +150,6 @@ export default function RagBrutalistChat() {
               />
             </div>
           </div>
-          {/* Top K */}
           <div className="flex flex-col border-4 border-black p-2 bg-orange-300 rounded-lg">
             <label className="font-bold mb-1">Top K:</label>
             <BrutalInput
@@ -175,7 +160,6 @@ export default function RagBrutalistChat() {
               className="w-16 bg-white"
             />
           </div>
-          {/* Chunk Size */}
           <div className="flex flex-col border-4 border-black p-2 bg-purple-300 rounded-lg">
             <label className="font-bold mb-1">Chunk Size:</label>
             <BrutalInput
@@ -188,8 +172,6 @@ export default function RagBrutalistChat() {
           </div>
         </div>
       </div>
-
-      {/* Sección de Mensajes */}
       <div className="flex-1 p-4 overflow-auto border-b-4 border-black bg-gray-100 relative">
         {messages.map((msg, idx) => (
           <div
@@ -207,8 +189,6 @@ export default function RagBrutalistChat() {
         ))}
         <div ref={messagesEndRef} />
       </div>
-
-      {/* Input de Usuario */}
       <div className="p-4 bg-white -rotate-1 transform origin-bottom-left border-4 border-black">
         <div className="flex space-x-3">
           <BrutalInput
