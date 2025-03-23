@@ -1,6 +1,6 @@
 import axios from "axios";
 import { FileItem, FileStatus } from "../store/filestore";
-import { DocumentNode } from "../visualizer/page";
+import { DocumentNode } from "../types/nodeTypes";
 import { CreateNodeData } from "../components/Graph/NodeForm";
 
 // Tipos base ya existentes

@@ -16,29 +16,9 @@ import { Modal } from "../components/Modal/Modal";
 // HOOKS de visualización de grafos
 import { useDocumentGraph } from "../lib/useDocumentGraph"; // Ya existente para "unconnected nodes"
 import { useHeterogeneousGraph } from "../lib/useHeterogeneousGraph"; // Nuevo para grafos con diferentes tipos de nodos
-
+import { DocumentNode } from "../types/nodeTypes";
+import { GraphEdge } from "../types/graphTypes";
 // Tipos para nodos y aristas
-export interface DocumentNode {
-  doc_id: string;
-  author: string | null;
-  title: string | null;
-  work: string | null;
-  languages: string[] | null;
-  sentiment_word: string | null;
-  categories: string[] | null;
-  keywords: string[] | null;
-  content_type: string | null;
-  tags: string[] | null;
-  topics: string[] | null;
-  style: string | null;
-  labels: string[] | null;
-  id: string;
-}
-interface GraphEdge {
-  source: string;
-  target: string;
-  relation: string;
-}
 
 type GraphMode = "unconnected" | "full";
 

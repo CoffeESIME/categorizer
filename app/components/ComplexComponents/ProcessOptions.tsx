@@ -111,7 +111,6 @@ export const ProcessOptions: React.FC<ProcessOptionsProps> = ({
   };
   const currentModelOptions = getModelOptions();
   useEffect(() => {
-    console.log(selectedProcessingOption);
     switch (selectedProcessingOption) {
       case "ocr":
         setRenderFields(["author", "title", "content", "tags", "sentiment"]);

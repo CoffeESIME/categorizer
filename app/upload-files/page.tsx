@@ -7,6 +7,7 @@ import { ButtonLink } from "../components/ButtonLink/ButtonLink";
 import categorizerAPI from "../utils/categorizerAPI";
 import CustomCheckbox from "../components/CheckBoxComponent/CheckBoxComponent";
 import { FileItem, useFileStore } from "../store/filestore";
+import { useRouter } from "next/navigation";
 
 export default function MultipleFileUpload() {
   const [step, setStep] = useState<0 | 1 | 2 | 3>(0);
@@ -24,10 +25,12 @@ export default function MultipleFileUpload() {
     filterByType,
     setFiles,
   } = useFileStore();
+
   useEffect(() => {
     setFiles([]);
     setStep(1);
   }, []);
+  const router = useRouter();
   const onDrop = useCallback(
     (acceptedFiles: File[]) => {
       const newFiles: FileItem[] = acceptedFiles.map((file) => ({
@@ -54,11 +57,12 @@ export default function MultipleFileUpload() {
     setUploading(true);
     try {
       const fileObjects = files;
-      console.log(fileObjects, "fileObjects");
       const uploadedFiles = await categorizerAPI.uploadFiles(fileObjects);
       uploadedFiles.forEach((fileMetadata) => {
         const matchingFile = files.find(
-          (f) => f.original_name === fileMetadata.original_name
+          (f) =>
+            f.original_name.toLowerCase().trim() ===
+            fileMetadata.original_name.toLocaleLowerCase().trim()
         );
         if (matchingFile) {
           updateFilePath(matchingFile.id, fileMetadata.location);
@@ -85,18 +89,13 @@ export default function MultipleFileUpload() {
     return Array.from(types);
   };
 
-  const handleProcessFiles = () => {
+  const handleProcessFiles = async () => {
     const selectedFiles = getSelectedFiles();
     if (selectedFiles.length === 0) {
       alert("Selecciona al menos un archivo para procesar");
       return;
     }
-    setStep(3);
-  };
-
-  const handleNewUpload = () => {
-    clearFiles();
-    setStep(1);
+    router.push("/processing");
   };
 
   return (
@@ -261,20 +260,6 @@ export default function MultipleFileUpload() {
                 variant="green"
               >
                 Procesar Seleccionados
-              </BrutalButton>
-            </div>
-          </div>
-        )}
-
-        {step === 3 && (
-          <div className="text-center space-y-4">
-            <h2 className="text-2xl font-bold">
-              ¡Archivos Listos para Procesamiento!
-            </h2>
-            <p>Has seleccionado {getSelectedFiles().length} archivos.</p>
-            <div className="mt-8">
-              <BrutalButton variant="red" onClick={handleNewUpload}>
-                Comenzar Nuevo Proceso
               </BrutalButton>
             </div>
           </div>

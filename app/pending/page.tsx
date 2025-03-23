@@ -47,7 +47,6 @@ export default function PendingFilesList() {
     }
     router.push("/processing");
   };
-  console.log("Archivos :", files);
   return (
     <div className="container mx-auto p-4 min-h-screen flex flex-col items-center justify-center bg-yellow-100">
       <TitleComponent title="Pending Files" variant="neobrutalism" />

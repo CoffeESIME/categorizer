@@ -1,6 +1,6 @@
 import { useRef, useEffect } from "react";
 import * as d3 from "d3";
-import { DocumentNode } from "../visualizer/page";
+import { DocumentNode } from "../types/nodeTypes";
 
 // Types - moved to a separate file
 export interface NodeDatum extends d3.SimulationNodeDatum {

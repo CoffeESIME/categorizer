@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { DocumentNode } from "@/app/visualizer/page";
+import { DocumentNode } from "@/app/types/nodeTypes";
 
 // Custom components
 import BrutalDropDown from "../DropDownComponent/DropdownComponent";
@@ -246,7 +246,7 @@ export const NodeDetailsPanel: React.FC<NodeDetailsPanelProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-10">
-      <div className="bg-white border-4 border-black p-6 rounded-md max-w-2xl w-full max-h-[80vh] overflow-y-auto transform rotate-1">
+      <div className="bg-white border-4 border-black p-6 rounded-md max-w-2xl w-full min-h-[50vh] max-h-[80vh] overflow-y-auto transform rotate-1">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-bold">Detalles del Nodo</h2>
           <button
@@ -384,10 +384,8 @@ export const NodeDetailsPanel: React.FC<NodeDetailsPanelProps> = ({
                       (option as any)[searchField] ||
                       `Sin ${searchField} (ID: ${option.id})`,
                   }))}
-                  // Se muestra el valor representativo (display) y se actualiza el id real seleccionado
                   selectedValue={selectedConnectionDisplay}
                   onSelect={(selectedOption) => {
-                    console.log("selected", selectedOption);
                     if (selectedOption) {
                       setSelectedConnectionId(selectedOption.value);
                       setSelectedConnectionDisplay(selectedOption.label);

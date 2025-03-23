@@ -329,8 +329,6 @@ export default function ProcessFiles() {
     setIsProcessing(true);
     try {
       const allMetadata = Object.values(fileMetadata);
-      const filesWithMetadata = allMetadata.filter(hasMetadata);
-      console.log("all metadata", allMetadata, filesWithMetadata);
       await categorizerAPI.saveFilesMetadata(allMetadata);
     } catch (error) {
       console.error("Error al guardar metadatos:", error);

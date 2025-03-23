@@ -7,7 +7,6 @@ export interface FileItem {
   id: string;
   file?: File;
   original_name: string;
-  filePath?: string;
   file_url?: string;
   file_type?: string;
   selected?: boolean;
@@ -16,7 +15,6 @@ export interface FileItem {
 
 interface FileStore {
   files: FileItem[];
-  // Funciones básicas
   addFiles: (newFiles: FileItem[]) => void;
   setFiles: (newFiles: FileItem[]) => void;
   updateFilePath: (id: string, path: string) => void;
@@ -25,7 +23,6 @@ interface FileStore {
   clearFiles: () => void;
   toggleSelection: (id: string) => void;
   toggleAllSelection: (selected: boolean) => void;
-  // Selectores
   getSelectedFiles: () => FileItem[];
   filterByType: (type: string) => FileItem[];
   getPendingFiles: () => FileItem[];
@@ -47,7 +44,9 @@ export const useFileStore = create<FileStore>()(
       updateFilePath: (id, path) =>
         set((state) => ({
           files: state.files.map((file) =>
-            file.id === id ? { ...file, filePath: path } : file
+            file.id.toLocaleLowerCase().trim() === id.toLocaleLowerCase().trim()
+              ? { ...file, file_url: path }
+              : file
           ),
         })),
       updateFile: (id, updates) =>
