@@ -233,7 +233,7 @@ export default function MultipleFileUpload() {
                         <span className="text-xs bg-gray-200 px-2 py-1 rounded">
                           {fileItem.file_type}
                         </span>
-                        {fileItem.filePath && (
+                        {fileItem.file_url && (
                           <span className="text-xs bg-green-200 px-2 py-1 rounded">
                             Subido ✓
                           </span>
