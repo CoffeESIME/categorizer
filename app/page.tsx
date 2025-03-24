@@ -30,6 +30,16 @@ export default function Home() {
           color="bg-blue-400"
         />
         <CategoryButton
+          href="/text-processing"
+          label="Procesar Texto"
+          color="bg-blue-400"
+        />
+        <CategoryButton
+          href="/node-management"
+          label="Node Management"
+          color="bg-blue-400"
+        />
+        <CategoryButton
           href="/visualizer"
           label="Visualization"
           color="bg-blue-400"

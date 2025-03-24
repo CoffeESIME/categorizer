@@ -3,25 +3,10 @@ import { BrutalInput } from "../InputComponent/InputComponent";
 import { BrutalButton } from "../ButtonComponent/ButtonComponent";
 import BrutalDropDown from "../DropDownComponent/DropdownComponent";
 import categorizerAPI from "../../utils/categorizerAPI";
+import { NodeType, NodeField, CreateNodeData } from "../../types/nodeTypes";
 
 // Definición de tipos para los campos y tipos de nodo
-interface NodeField {
-  fieldName: string;
-  placeholder?: string;
-  defaultValue?: string;
-  required: boolean;
-}
-
-export interface NodeType {
-  id: string;
-  name: string;
-  fields: NodeField[];
-}
-
-export interface CreateNodeData {
-  type: NodeType | null;
-  properties: Record<string, string>;
-}
+// Se importan desde nodeTypes.ts
 
 interface CreateNodeWithTypeFormProps {
   onCreateNode: (data: CreateNodeData) => void;

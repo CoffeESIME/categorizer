@@ -56,15 +56,6 @@ interface AutoFields {
   color_palette: boolean;
   composition: boolean;
 }
-function hasMetadata(file: FileMetadata): boolean {
-  return (
-    file.processingMethod !== undefined ||
-    (file.content !== undefined && file.content.trim() !== "") ||
-    (file.analysis !== undefined && file.analysis.trim() !== "") ||
-    (file.categories !== undefined && file.categories.length > 0) ||
-    (file.keywords !== undefined && file.keywords.length > 0)
-  );
-}
 
 export default function ProcessFiles() {
   const { getSelectedFiles } = useFileStore();

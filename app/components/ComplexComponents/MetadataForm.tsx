@@ -321,6 +321,11 @@ export const MetadataForm: React.FC<MetadataFormProps> = ({
         />
       </div>
       <div>
+        <label className="font-bold">Tags</label>
+        {renderTagSection(metadata.tags || [], addTag, removeTag)}
+      </div>
+
+      <div>
         <label className="font-bold">Contenido</label>
         <BrutalInput
           type="textarea"
@@ -333,21 +338,41 @@ export const MetadataForm: React.FC<MetadataFormProps> = ({
       </div>
 
       <div>
-        <label className="font-bold">Sentimiento</label>
+        <label className="font-bold">Sentiment Word</label>
         <BrutalInput
           type="text"
-          placeholder="Sentimiento (ej: positivo, negativo...)"
-          value={metadata.sentiment || ""}
-          onChange={(e) => updateMetadata({ sentiment: e.target.value })}
+          placeholder="Ej: positivo, negativo"
+          value={metadata.sentiment_word || ""}
+          onChange={(e) => updateMetadata({ sentiment_word: e.target.value })}
           className="w-full p-2 border-4 border-black rounded-lg"
         />
       </div>
 
       <div>
-        <label className="font-bold">Tags</label>
-        {renderTagSection(metadata.tags || [], addTag, removeTag)}
+        <label className="font-bold">Sentiment Value (entre -1 y 1)</label>
+        <BrutalInput
+          type="number"
+          step="0.1"
+          min={-1}
+          max={1}
+          value={metadata.sentiment_value || 0}
+          onChange={(e) =>
+            updateMetadata({ sentiment_value: parseFloat(e.target.value) })
+          }
+          className="w-full p-2 border-4 border-black rounded-lg"
+        />
       </div>
-
+      <div>
+        <label className="font-bold">Analysis</label>
+        <BrutalInput
+          type="textarea"
+          placeholder="Análisis profundo del contenido"
+          value={metadata.analysis || ""}
+          onChange={(e) => updateMetadata({ analysis: e.target.value })}
+          className="w-full p-2 border-4 border-black rounded-lg h-32"
+          multiline
+        />
+      </div>
       {metadata.extractedText && (
         <div>
           <label className="font-bold">Texto Extraído</label>

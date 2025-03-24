@@ -6,15 +6,12 @@ import { TitleComponent } from "../components/TitleComponent/TtitleComponent";
 import { ButtonLink } from "../components/ButtonLink/ButtonLink";
 import { NodeDetailsPanel } from "../components/Graph/NodeComponent";
 import categorizerAPI from "../utils/categorizerAPI";
-import {
-  CreateNodeData,
-  CreateNodeWithTypeForm,
-} from "../components/Graph/NodeForm";
+import { CreateNodeWithTypeForm } from "../components/Graph/NodeForm";
 import { FilterForm } from "../components/Graph/FilterForm";
 import { Modal } from "../components/Modal/Modal";
 import { useDocumentGraph } from "../lib/useDocumentGraph";
 import { useHeterogeneousGraph } from "../lib/useHeterogeneousGraph";
-import { DocumentNode } from "../types/nodeTypes";
+import { CreateNodeData, DocumentNode } from "../types/nodeTypes";
 import { GraphEdge } from "../types/graphTypes";
 type GraphMode = "unconnected" | "full";
 

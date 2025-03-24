@@ -1,12 +1,18 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { DocumentNode } from "@/app/types/nodeTypes";
+import { DocumentNode, NodeType } from "@/app/types/nodeTypes";
 import BrutalDropDown from "../DropDownComponent/DropdownComponent";
 import { BrutalInput } from "../InputComponent/InputComponent";
 import { BrutalButton } from "../ButtonComponent/ButtonComponent";
 import CustomCheckbox from "../CheckBoxComponent/CheckBoxComponent";
 import BrutalSearchSelect from "../BurtalSearchSelectComponent/BrutalSearchComponent";
 import categorizerAPI from "@/app/utils/categorizerAPI";
+import {
+  RelationshipType,
+  DEFAULT_RELATIONSHIPS,
+  getValidRelationships,
+} from "@/app/types/relationshipTypes";
+
 export interface UpdateFieldConfig {
   name: string;
   label: string;
@@ -89,19 +95,6 @@ const searchFieldMapping: Record<string, string> = {
   language: "name",
 };
 
-const nodeTypeOptions = [
-  { value: "", label: "Ninguno" },
-  { value: "author", label: "Author" },
-  { value: "book", label: "Book" },
-  { value: "image", label: "Image" },
-  { value: "video", label: "Video" },
-  { value: "tag", label: "Tag" },
-  { value: "quote", label: "Quote" },
-  { value: "music", label: "Music" },
-  { value: "country", label: "Country" },
-  { value: "language", label: "Language" },
-];
-
 interface NodeDetailsPanelProps {
   selectedNode: DocumentNode | null;
   onClose: () => void;
@@ -112,6 +105,7 @@ export const NodeDetailsPanel: React.FC<NodeDetailsPanelProps> = ({
   onClose,
 }) => {
   const [activeTab, setActiveTab] = useState<"update" | "connect">("update");
+  const [nodeTypes, setNodeTypes] = useState<NodeType[]>([]);
 
   const [currentConnections, setCurrentConnections] = useState<DocumentNode[]>(
     []
@@ -128,10 +122,34 @@ export const NodeDetailsPanel: React.FC<NodeDetailsPanelProps> = ({
   const [selectedConnectionDisplay, setSelectedConnectionDisplay] =
     useState<string>("");
 
+  // Estado para el tipo de relación
+  const [availableRelationships, setAvailableRelationships] = useState<
+    RelationshipType[]
+  >([]);
+  const [selectedRelationship, setSelectedRelationship] =
+    useState<RelationshipType | null>(null);
+
+  // Estado para propiedades de la relación
+  const [relationComment, setRelationComment] = useState<string>("");
+  const [relationConfidence, setRelationConfidence] = useState<number>(1); // Alta confianza por defecto
+
   // Valores del formulario de actualización
   const [updateFormValues, setUpdateFormValues] = useState<Record<string, any>>(
     {}
   );
+
+  // Cargar tipos de nodos desde la API
+  useEffect(() => {
+    async function fetchNodeTypes() {
+      try {
+        const types: NodeType[] = await categorizerAPI.getNodeTypes();
+        setNodeTypes(types);
+      } catch (error) {
+        console.error("Error fetching node types", error);
+      }
+    }
+    fetchNodeTypes();
+  }, []);
 
   useEffect(() => {
     if (selectedNode && selectedNode.id) {
@@ -162,9 +180,50 @@ export const NodeDetailsPanel: React.FC<NodeDetailsPanelProps> = ({
           : selectedNode.labels || "",
         id: selectedNode.id || "",
       });
-      // Aquí se podrían cargar las conexiones existentes
+
+      // Cargar conexiones existentes
+      async function fetchConnections() {
+        if (!selectedNode?.id) return; // Verificación adicional
+
+        try {
+          const connections = await categorizerAPI.fetchNodeConnections(
+            selectedNode.id
+          );
+          setCurrentConnections(connections);
+        } catch (error) {
+          console.error("Error al cargar conexiones:", error);
+        }
+      }
+
+      fetchConnections();
     }
   }, [selectedNode]);
+
+  // Actualizar relaciones disponibles cuando cambian los tipos de nodos
+  useEffect(() => {
+    if (selectedConnectionType && selectedNode && selectedNode.labels?.length) {
+      const sourceType = selectedNode.labels[0].toLowerCase();
+      const availableRels = getValidRelationships(
+        sourceType,
+        selectedConnectionType
+      );
+      setAvailableRelationships(availableRels);
+
+      // Seleccionar la primera relación por defecto si hay disponibles
+      if (availableRels.length > 0) {
+        setSelectedRelationship(availableRels[0]);
+      } else {
+        // Si no hay relaciones específicas, usar RELATES_TO como predeterminada
+        const defaultRel = DEFAULT_RELATIONSHIPS.find(
+          (r) => r.id === "RELATES_TO"
+        );
+        setSelectedRelationship(defaultRel || null);
+      }
+    } else {
+      setAvailableRelationships([]);
+      setSelectedRelationship(null);
+    }
+  }, [selectedConnectionType, selectedNode]);
 
   if (!selectedNode) return null;
 
@@ -203,9 +262,36 @@ export const NodeDetailsPanel: React.FC<NodeDetailsPanelProps> = ({
   };
 
   const handleConnectSubmit = async () => {
-    if (!selectedConnectionId) return;
-    console.log("Conectando nodo con id:", selectedConnectionId);
-    // Llamada a la API para conectar el nodo usando selectedConnectionId
+    if (!selectedConnectionId || !selectedNode || !selectedRelationship) return;
+
+    try {
+      const relationshipData = {
+        sourceId: selectedNode.id,
+        targetId: selectedConnectionId,
+        relationshipType: selectedRelationship.id,
+        relationshipProperties: {
+          comment: relationComment,
+          confidence: relationConfidence,
+          weight: 0, // Peso inicial en 0
+          createdBy: "admin", // Aquí podrías obtener el usuario actual
+        },
+      };
+
+      await categorizerAPI.createRelationship(relationshipData);
+
+      // Recargar conexiones después de crear una nueva
+      const connections = await categorizerAPI.fetchNodeConnections(
+        selectedNode.id
+      );
+      setCurrentConnections(connections);
+
+      // Limpiar selección
+      setSelectedConnectionId(null);
+      setSelectedConnectionDisplay("");
+      setRelationComment("");
+    } catch (error) {
+      console.error("Error al conectar nodos:", error);
+    }
   };
 
   const handleDeleteConnection = async (connectionNodeId: string) => {
@@ -251,27 +337,19 @@ export const NodeDetailsPanel: React.FC<NodeDetailsPanelProps> = ({
           })}
         </div>
 
-        <div className="flex mb-4">
-          <button
-            className={`flex-1 p-2 border-b-2 ${
-              activeTab === "update"
-                ? "border-black font-bold"
-                : "border-transparent"
-            }`}
+        <div className="flex space-x-2 mb-4">
+          <BrutalButton
             onClick={() => setActiveTab("update")}
+            variant={activeTab === "update" ? "blue" : "gray"}
           >
-            Actualizar Nodo
-          </button>
-          <button
-            className={`flex-1 p-2 border-b-2 ${
-              activeTab === "connect"
-                ? "border-black font-bold"
-                : "border-transparent"
-            }`}
+            Actualizar
+          </BrutalButton>
+          <BrutalButton
             onClick={() => setActiveTab("connect")}
+            variant={activeTab === "connect" ? "blue" : "gray"}
           >
-            Conectar Nodo
-          </button>
+            Conexiones
+          </BrutalButton>
         </div>
 
         {activeTab === "update" && (
@@ -344,11 +422,13 @@ export const NodeDetailsPanel: React.FC<NodeDetailsPanelProps> = ({
               </label>
               <BrutalDropDown
                 buttonLabel={
-                  nodeTypeOptions.find(
-                    (o) => o.value === selectedConnectionType
-                  )?.label || "Ninguno"
+                  nodeTypes.find((t) => t.id === selectedConnectionType)
+                    ?.name || "Ninguno"
                 }
-                options={nodeTypeOptions}
+                options={nodeTypes.map((type) => ({
+                  label: type.name,
+                  value: type.id,
+                }))}
                 onSelect={(value: string) => handleNodeTypeSelect(value)}
               />
             </div>
@@ -376,12 +456,77 @@ export const NodeDetailsPanel: React.FC<NodeDetailsPanelProps> = ({
                   placeholder="Escribe para filtrar..."
                   label=""
                 />
+
+                {selectedConnectionId && (
+                  <>
+                    <div className="mt-3">
+                      <label className="font-bold block mb-1">
+                        Tipo de relación:
+                      </label>
+                      <BrutalDropDown
+                        buttonLabel={
+                          selectedRelationship?.name || "Seleccionar relación"
+                        }
+                        options={availableRelationships.map((rel) => ({
+                          label: rel.name,
+                          value: rel.id,
+                        }))}
+                        onSelect={(value: string) => {
+                          const rel = availableRelationships.find(
+                            (r) => r.id === value
+                          );
+                          setSelectedRelationship(rel || null);
+                        }}
+                      />
+                      {selectedRelationship && (
+                        <p className="text-sm mt-1 text-gray-600">
+                          {selectedRelationship.description}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="mt-3">
+                      <label className="font-bold block mb-1">
+                        Comentario (opcional):
+                      </label>
+                      <BrutalInput
+                        type="text"
+                        multiline={true}
+                        value={relationComment}
+                        onChange={(e) => setRelationComment(e.target.value)}
+                        placeholder="Añade un comentario que explique esta relación..."
+                      />
+                    </div>
+
+                    <div className="mt-3">
+                      <label className="font-bold block mb-1">
+                        Nivel de confianza:
+                      </label>
+                      <div className="flex items-center">
+                        <input
+                          type="range"
+                          min="0"
+                          max="1"
+                          step="0.1"
+                          value={relationConfidence}
+                          onChange={(e) =>
+                            setRelationConfidence(parseFloat(e.target.value))
+                          }
+                          className="w-full mr-2"
+                        />
+                        <span>{(relationConfidence * 100).toFixed(0)}%</span>
+                      </div>
+                    </div>
+                  </>
+                )}
+
                 <BrutalButton
                   onClick={handleConnectSubmit}
                   variant="purple"
-                  className="mt-2 w-full"
+                  className="mt-3 w-full"
+                  disabled={!selectedConnectionId || !selectedRelationship}
                 >
-                  Conectar al nodo seleccionado
+                  Conectar con relación {selectedRelationship?.name || ""}
                 </BrutalButton>
               </div>
             )}

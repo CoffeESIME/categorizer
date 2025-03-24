@@ -1,7 +1,11 @@
 import axios from "axios";
 import { FileItem, FileStatus } from "../store/filestore";
-import { DocumentNode } from "../types/nodeTypes";
-import { CreateNodeData } from "../components/Graph/NodeForm";
+import { DocumentNode, NodeType, CreateNodeData } from "../types/nodeTypes";
+import {
+  RelationshipType,
+  RelationshipProperty,
+  DEFAULT_RELATIONSHIP_PROPERTIES,
+} from "../types/relationshipTypes";
 
 // Tipos base ya existentes
 export interface FileMetadata {
@@ -14,6 +18,7 @@ export interface FileMetadata {
   status: FileStatus;
 }
 
+// Interfaz para resultados de procesamiento LLM
 export interface ProcessLLMResult {
   raw_analysis?: any;
   raw?: any;
@@ -41,6 +46,16 @@ export interface ProcessLLMResult {
   composition?: string;
 }
 
+export interface ProcessLLMUnifiedOptions {
+  task: TaskType;
+  input_text?: string;
+  file_url?: string;
+  model: string;
+  temperature: number;
+  ocr_method?: OCRMethod;
+  prompt?: string;
+}
+
 // Interfaz para OCR
 export interface OCRResult {
   text: string;
@@ -52,14 +67,12 @@ export type TaskType = "text" | "image_description" | "ocr";
 export type OCRMethod = "tesseract" | "llm";
 export type ProcessingMethod = "manual" | "llm" | "ocr";
 
-export interface ProcessLLMUnifiedOptions {
-  task: TaskType;
-  input_text?: string;
-  file_url?: string;
-  model: string;
-  temperature: number;
-  ocr_method?: OCRMethod;
-  prompt?: string;
+// Interfaz para la creación de relaciones
+export interface CreateRelationshipData {
+  sourceId: string;
+  targetId: string;
+  relationshipType: string;
+  relationshipProperties?: Partial<RelationshipProperty>;
 }
 
 class CategorizerAPI {
@@ -141,7 +154,25 @@ class CategorizerAPI {
       throw error;
     }
   }
-
+  async processTextLLM(options: any): Promise<ProcessLLMResult> {
+    try {
+      const response = await fetch(`${this.baseUrl}/content/process`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...this.headers,
+        },
+        body: JSON.stringify(options),
+      });
+      if (!response.ok) {
+        throw new Error(`Error: ${response.status}`);
+      }
+      return await response.json();
+    } catch (error) {
+      console.error("Error in processTextLLM:", error);
+      throw error;
+    }
+  }
   async saveFilesMetadata(metadata: any[]): Promise<void> {
     try {
       const response = await fetch(`${this.baseUrl}/metadata/save`, {
@@ -160,7 +191,24 @@ class CategorizerAPI {
       throw error;
     }
   }
-
+  async saveTextMetadata(metadata: any[]): Promise<void> {
+    try {
+      const response = await fetch(`${this.baseUrl}/content/metadata/save`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...this.headers,
+        },
+        body: JSON.stringify(metadata),
+      });
+      if (!response.ok) {
+        throw new Error(`Error: ${response.status}`);
+      }
+    } catch (error) {
+      console.error("Error in saveFilesMetadata:", error);
+      throw error;
+    }
+  }
   async getUnconnectedNodes(): Promise<any[]> {
     try {
       const response = await fetch(
@@ -248,16 +296,52 @@ class CategorizerAPI {
     }
   }
 
+  // Nuevo método para crear una relación con propiedades adicionales
+  async createRelationship(data: CreateRelationshipData): Promise<any> {
+    try {
+      // Combinamos las propiedades predeterminadas con las proporcionadas
+      const relationshipProperties = {
+        ...DEFAULT_RELATIONSHIP_PROPERTIES,
+        ...data.relationshipProperties,
+        createdAt: new Date().toISOString(),
+      };
+
+      const payload = {
+        sourceId: data.sourceId,
+        targetId: data.targetId,
+        relationshipType: data.relationshipType,
+        relationshipProperties,
+      };
+
+      const response = await axios.post(
+        `${this.baseUrl}/nodes/create-relationship`,
+        payload,
+        {
+          headers: this.headers,
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Error creating relationship", error);
+      throw error;
+    }
+  }
+
   // DELETE /nodes/:nodeId/connections/:connectionNodeId - elimina la conexión
   async deleteNodeConnection(
     nodeId: string,
-    connectionNodeId: string
+    connectionNodeId: string,
+    relationshipType?: string
   ): Promise<void> {
     try {
+      // Si se proporciona un tipo de relación, lo incluimos en la solicitud
+      const params = relationshipType ? { relationshipType } : {};
+
       await axios.delete(
         `${this.baseUrl}/nodes/${nodeId}/connections-actions/${connectionNodeId}`,
         {
           headers: this.headers,
+          params,
         }
       );
     } catch (error) {
@@ -265,6 +349,39 @@ class CategorizerAPI {
       throw error;
     }
   }
+
+  // Método para obtener los tipos de relaciones disponibles
+  async getRelationshipTypes(): Promise<RelationshipType[]> {
+    try {
+      const response = await axios.get<RelationshipType[]>(
+        `${this.baseUrl}/relationship-types`,
+        {
+          headers: this.headers,
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching relationship types", error);
+      throw error;
+    }
+  }
+
+  // Método para obtener las relaciones de un nodo
+  async getNodeRelationships(nodeId: string): Promise<any[]> {
+    try {
+      const response = await axios.get(
+        `${this.baseUrl}/nodes/${nodeId}/relationships`,
+        {
+          headers: this.headers,
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching node relationships", error);
+      throw error;
+    }
+  }
+
   async fetchGraphData(): Promise<{
     nodes: DocumentNode[];
     edges: { source: string; target: string; relation: string }[];
@@ -279,14 +396,17 @@ class CategorizerAPI {
       throw error;
     }
   }
-  async getNodeTypes(): Promise<any> {
+  async getNodeTypes(): Promise<NodeType[]> {
     try {
-      const response = await axios.get(`${this.baseUrl}/node-types`, {
-        headers: this.headers,
-      });
+      const response = await axios.get<NodeType[]>(
+        `${this.baseUrl}/node-types`,
+        {
+          headers: this.headers,
+        }
+      );
       return response.data;
     } catch (error) {
-      console.error("Error fetching graph data", error);
+      console.error("Error fetching node types", error);
       throw error;
     }
   }
@@ -313,9 +433,9 @@ class CategorizerAPI {
       throw error;
     }
   }
-  async fetchNodesByType(nodeType: string): Promise<any> {
+  async fetchNodesByType(nodeType: string): Promise<DocumentNode[]> {
     try {
-      const response = await axios.get(
+      const response = await axios.get<DocumentNode[]>(
         `${this.baseUrl}/nodes/node-types/${nodeType}`,
         {
           headers: this.headers,

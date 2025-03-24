@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import CustomCheckbox from "../components/CheckBoxComponent/CheckBoxComponent";
 import BrutalButton from "../components/ButtonComponent/ButtonComponent";
 import { TitleComponent } from "../components/TitleComponent/TtitleComponent";

@@ -18,7 +18,6 @@ export interface DocumentNode extends BaseNode {
   tags?: string[];
   topics?: string[];
   style?: string;
-  // etc.
 }
 
 export interface AuthorNode extends BaseNode {
@@ -30,4 +29,25 @@ export interface AuthorNode extends BaseNode {
 export interface CountryNode extends BaseNode {
   name: string;
   iso_code?: string;
+}
+
+// Definición de tipo para nodos incluyendo los campos requeridos
+export interface NodeField {
+  fieldName: string;
+  placeholder?: string;
+  defaultValue?: string;
+  required?: boolean;
+  type?: string;
+}
+
+export interface NodeType {
+  id: string;
+  name: string;
+  fields: NodeField[];
+}
+
+// Datos para la creación de un nodo con tipo específico
+export interface CreateNodeData {
+  type: NodeType | null;
+  properties: Record<string, string>;
 }
