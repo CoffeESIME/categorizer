@@ -122,23 +122,19 @@ export const NodeDetailsPanel: React.FC<NodeDetailsPanelProps> = ({
   const [selectedConnectionDisplay, setSelectedConnectionDisplay] =
     useState<string>("");
 
-  // Estado para el tipo de relación
   const [availableRelationships, setAvailableRelationships] = useState<
     RelationshipType[]
   >([]);
   const [selectedRelationship, setSelectedRelationship] =
     useState<RelationshipType | null>(null);
 
-  // Estado para propiedades de la relación
   const [relationComment, setRelationComment] = useState<string>("");
-  const [relationConfidence, setRelationConfidence] = useState<number>(1); // Alta confianza por defecto
+  const [relationConfidence, setRelationConfidence] = useState<number>(1);
 
-  // Valores del formulario de actualización
   const [updateFormValues, setUpdateFormValues] = useState<Record<string, any>>(
     {}
   );
 
-  // Cargar tipos de nodos desde la API
   useEffect(() => {
     async function fetchNodeTypes() {
       try {
@@ -181,9 +177,8 @@ export const NodeDetailsPanel: React.FC<NodeDetailsPanelProps> = ({
         id: selectedNode.id || "",
       });
 
-      // Cargar conexiones existentes
       async function fetchConnections() {
-        if (!selectedNode?.id) return; // Verificación adicional
+        if (!selectedNode?.id) return;
 
         try {
           const connections = await categorizerAPI.fetchNodeConnections(
@@ -199,7 +194,6 @@ export const NodeDetailsPanel: React.FC<NodeDetailsPanelProps> = ({
     }
   }, [selectedNode]);
 
-  // Actualizar relaciones disponibles cuando cambian los tipos de nodos
   useEffect(() => {
     if (selectedConnectionType && selectedNode && selectedNode.labels?.length) {
       const sourceType = selectedNode.labels[0].toLowerCase();
@@ -209,11 +203,9 @@ export const NodeDetailsPanel: React.FC<NodeDetailsPanelProps> = ({
       );
       setAvailableRelationships(availableRels);
 
-      // Seleccionar la primera relación por defecto si hay disponibles
       if (availableRels.length > 0) {
         setSelectedRelationship(availableRels[0]);
       } else {
-        // Si no hay relaciones específicas, usar RELATES_TO como predeterminada
         const defaultRel = DEFAULT_RELATIONSHIPS.find(
           (r) => r.id === "RELATES_TO"
         );
@@ -272,20 +264,18 @@ export const NodeDetailsPanel: React.FC<NodeDetailsPanelProps> = ({
         relationshipProperties: {
           comment: relationComment,
           confidence: relationConfidence,
-          weight: 0, // Peso inicial en 0
-          createdBy: "admin", // Aquí podrías obtener el usuario actual
+          weight: 0,
+          createdBy: "admin",
         },
       };
 
       await categorizerAPI.createRelationship(relationshipData);
 
-      // Recargar conexiones después de crear una nueva
       const connections = await categorizerAPI.fetchNodeConnections(
         selectedNode.id
       );
       setCurrentConnections(connections);
 
-      // Limpiar selección
       setSelectedConnectionId(null);
       setSelectedConnectionDisplay("");
       setRelationComment("");

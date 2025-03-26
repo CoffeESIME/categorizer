@@ -42,7 +42,6 @@ export const DEFAULT_RELATIONSHIPS: RelationshipType[] = [
     id: "RELATES_TO",
     name: "Relacionado con",
     description: "Relación genérica entre dos nodos",
-    // Al no especificar tipos, esta relación es válida entre cualquier par de nodos
   },
   {
     id: "REFERENCES",
@@ -74,18 +73,15 @@ export const DEFAULT_RELATIONSHIPS: RelationshipType[] = [
   },
 ];
 
-// Función para obtener relaciones válidas entre dos tipos de nodos
 export function getValidRelationships(
   sourceType: string,
   targetType: string
 ): RelationshipType[] {
   return DEFAULT_RELATIONSHIPS.filter((rel) => {
-    // Si no hay tipos específicos, la relación es válida para cualquier par
     if (!rel.validSourceTypes && !rel.validTargetTypes) {
       return true;
     }
 
-    // Si hay tipos específicos, verificar que coincidan
     const validSource =
       !rel.validSourceTypes || rel.validSourceTypes.includes(sourceType);
     const validTarget =
@@ -94,3 +90,9 @@ export function getValidRelationships(
     return validSource && validTarget;
   });
 }
+
+export const DEFAULT_RELATIONSHIP_PROPERTIES: RelationshipProperty = {
+  confidence: 1,
+  weight: 0,
+  comment: "",
+};

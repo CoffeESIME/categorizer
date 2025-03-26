@@ -22,21 +22,9 @@ export default function DocumentGraphVisualization() {
   const [isAddNodeModalOpen, setIsAddNodeModalOpen] = useState<boolean>(false);
   const [isFilterModalOpen, setIsFilterModalOpen] = useState<boolean>(false);
   const [filter, setFilter] = useState<string>("");
-
-  // ---------------------------------------------------------------------
-  // 1. Estados / Datos separables para cada modo
-  // ---------------------------------------------------------------------
-  // "unconnected" data
   const [unconnectedNodes, setUnconnectedNodes] = useState<DocumentNode[]>([]);
-
-  // Podrías tener un tipo genérico si hay nodos que no tienen doc_id
-  // En este ejemplo asumimos que igual usas DocumentNode, con edges
   const [fullGraphNodes, setFullGraphNodes] = useState<DocumentNode[]>([]);
   const [fullGraphEdges, setFullGraphEdges] = useState<GraphEdge[]>([]);
-
-  // ---------------------------------------------------------------------
-  // 2. Llamadas al backend
-  // ---------------------------------------------------------------------
 
   async function loadUnconnectedNodes() {
     try {
@@ -64,9 +52,6 @@ export default function DocumentGraphVisualization() {
     }
   }
 
-  // ---------------------------------------------------------------------
-  // 3. useEffect para cargar datos según el modo
-  // ---------------------------------------------------------------------
   useEffect(() => {
     if (graphMode === "unconnected") {
       loadUnconnectedNodes();
@@ -75,27 +60,18 @@ export default function DocumentGraphVisualization() {
     }
   }, [graphMode]);
 
-  // ---------------------------------------------------------------------
-  // 4. Hooks de renderización:
-  // ---------------------------------------------------------------------
-
-  // A) Hook para "unconnected" (usa useDocumentGraph)
   const unconnectedGraph = useDocumentGraph({
     documents: unconnectedNodes,
-    edges: [], // sin aristas
+    edges: [],
     onNodeClick: (node) => {
       setSelectedNode(node);
     },
   });
 
-  // B) Hook para grafo completo (usa useHeterogeneousGraph)
-  //    asumiendo que useHeterogeneousGraph define la interfaz de nodos y edges
   const fullGraph = useHeterogeneousGraph({
-    nodes: fullGraphNodes, // nodos heterogéneos o DocumentNode
-    edges: fullGraphEdges, // GraphEdge
+    nodes: fullGraphNodes,
+    edges: fullGraphEdges,
     onNodeClick: (nodeData) => {
-      // nodeData puede no coincidir 1:1 con DocumentNode
-      // pero si coincide, guardamos en selectedNode
       setSelectedNode(nodeData as DocumentNode);
     },
   });
@@ -126,12 +102,8 @@ export default function DocumentGraphVisualization() {
     setGraphMode((prev) => (prev === "unconnected" ? "full" : "unconnected"));
   };
 
-  // ---------------------------------------------------------------------
-  // 6. Render
-  // ---------------------------------------------------------------------
   return (
     <div className="flex min-h-screen border-4 border-black bg-white">
-      {/* Sidebar */}
       <div className="w-1/4 border-r-4 border-black p-4 bg-[#FFD6E8]  origin-top-left transform flex flex-col gap-4">
         <TitleComponent title="Document Graph" variant="yellow" />
 
@@ -143,7 +115,6 @@ export default function DocumentGraphVisualization() {
           Filtrar
         </BrutalButton>
 
-        {/* Botón para alternar modo */}
         <BrutalButton variant="orange" onClick={handleModeSwitch}>
           Modo:{" "}
           {graphMode === "unconnected" ? "Sin conexiones" : "Grafo completo"}
@@ -154,7 +125,6 @@ export default function DocumentGraphVisualization() {
         </ButtonLink>
       </div>
 
-      {/* Main area */}
       <div className="flex-1 p-4 bg-[#FFFCD6]  origin-top-left transform">
         <div className="border-4 border-black p-2 rounded-md bg-[#FFFFFF]">
           {loading ? (
@@ -167,14 +137,12 @@ export default function DocumentGraphVisualization() {
         </div>
       </div>
 
-      {/* Modal para crear nodo */}
       {isAddNodeModalOpen && (
         <Modal onClose={() => setIsAddNodeModalOpen(false)}>
           <CreateNodeWithTypeForm onCreateNode={handleCreateNode} />
         </Modal>
       )}
 
-      {/* Modal para filtrar */}
       {isFilterModalOpen && (
         <Modal onClose={() => setIsFilterModalOpen(false)}>
           <FilterForm
@@ -185,7 +153,6 @@ export default function DocumentGraphVisualization() {
         </Modal>
       )}
 
-      {/* Details panel */}
       <NodeDetailsPanel
         selectedNode={selectedNode}
         onClose={() => setSelectedNode(null)}
