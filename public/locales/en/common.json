@@ -1,0 +1,140 @@
+{
+  "general": {
+    "languageSelector": "Change language",
+    "english": "English",
+    "spanish": "Spanish",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "confirm": "Confirm",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "loading": "Loading...",
+    "success": "Success!",
+    "error": "Error"
+  },
+  "nav": {
+    "home": "Home",
+    "upload": "Upload Files",
+    "process": "Process",
+    "visualizer": "Visualizer",
+    "pending": "Pending",
+    "search": "Search"
+  },
+  "homepage": {
+    "title": "Welcome to Categorizer",
+    "subtitle": "A tool to manage and categorize files",
+    "startButton": "Get Started"
+  },
+  "upload": {
+    "title": "Upload Files",
+    "dragDrop": "Drag and drop your files here",
+    "browse": "or click to browse",
+    "uploading": "Uploading files...",
+    "uploadSuccess": "Files uploaded successfully",
+    "uploadError": "Error uploading files",
+    "continue": "Continue to processing"
+  },
+  "processing": {
+    "title": "Process Files",
+    "subtitle": "Select a file and configure its processing options",
+    "filesProcessed": "{{count}} of {{total}} files processed",
+    "saveMetadata": "Save Metadata",
+    "savingNotAllowed": "{{count}} files remaining to be processed",
+    "saveComplete": "Metadata saved successfully",
+    "deleteFile": "Delete File",
+    "deleteConfirm": "Are you sure you want to delete this file?",
+    "useSimpleForm": "Use Simple Form",
+    "useCombinedForm": "Use Combined Form"
+  },
+  "processOptions": {
+    "title": "Processing Options",
+    "method": "Processing Method",
+    "manual": "Manual",
+    "ocr": "OCR",
+    "llm": "LLM",
+    "imageDescription": "Image Description",
+    "model": "Model",
+    "temperature": "Temperature",
+    "processWithLLM": "Process with LLM",
+    "processWithOCR": "Process with OCR",
+    "autoFields": "Auto Fields"
+  },
+  "metadataForm": {
+    "ocrTitle": "OCR Metadata",
+    "imageTitle": "Image Analysis Metadata",
+    "generalTitle": "General/Manual Metadata",
+    "fields": {
+      "title": "Title",
+      "author": "Author",
+      "tags": "Tags",
+      "addTag": "Add tag",
+      "work": "Work/Source",
+      "languages": "Languages",
+      "sentiment_word": "Sentiment Word",
+      "sentiment_value": "Sentiment Value (between -1 and 1)",
+      "analysis": "Analysis",
+      "categories": "Categories",
+      "keywords": "Keywords",
+      "content_type": "Content Type",
+      "multilingual": "Multilingual?",
+      "content": "Clean Content",
+      "description": "Description",
+      "topics": "Topics",
+      "style": "Style",
+      "color_palette": "Color Palette",
+      "composition": "Composition",
+      "extractedText": "Extracted Text"
+    },
+    "placeholders": {
+      "title": "Content title",
+      "author": "Content author",
+      "tags": "Add tag",
+      "work": "Work or source",
+      "languages": "E.g.: en, es",
+      "sentiment_word": "E.g.: positive, negative",
+      "categories": "Categories separated by comma",
+      "keywords": "Keywords separated by comma",
+      "content_type": "E.g.: quote, article...",
+      "content": "Clean extracted text",
+      "description": "Detailed image description",
+      "topics": "Topics separated by comma",
+      "style": "Visual style description",
+      "color_palette": "Colors separated by comma (optional)",
+      "composition": "Notes about image composition",
+      "regularContent": "File content",
+      "analysis": "In-depth content analysis"
+    }
+  },
+  "fileList": {
+    "title": "File List",
+    "status": {
+      "completed": "Completed",
+      "pending": "Pending",
+      "processing": "Processing"
+    }
+  },
+  "visualizer": {
+    "title": "Visualizer",
+    "zoomIn": "Zoom In",
+    "zoomOut": "Zoom Out",
+    "resetView": "Reset View",
+    "noData": "No data to visualize"
+  },
+  "pending": {
+    "title": "Pending Files",
+    "noFiles": "No pending files",
+    "status": "Status",
+    "uploadedDate": "Upload Date",
+    "details": "View Details"
+  },
+  "search": {
+    "title": "Search",
+    "placeholder": "Search...",
+    "filters": "Filters",
+    "noResults": "No results found",
+    "searchButton": "Search"
+  }
+}

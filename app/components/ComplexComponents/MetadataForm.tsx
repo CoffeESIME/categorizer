@@ -1,5 +1,6 @@
 "use client";
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { BrutalInput } from "../InputComponent/InputComponent";
 import BrutalButton from "../ButtonComponent/ButtonComponent";
 
@@ -18,6 +19,7 @@ export const MetadataForm: React.FC<MetadataFormProps> = ({
   removeTag,
   onDeleteFile,
 }) => {
+  const { t } = useTranslation();
   const [showCombinedForm, setShowCombinedForm] = useState(false);
   const [showDeleteOption, setShowDeleteOption] = useState(false);
 
@@ -33,7 +35,7 @@ export const MetadataForm: React.FC<MetadataFormProps> = ({
         <BrutalInput
           type="text"
           id="tagInput"
-          placeholder="Agregar tag"
+          placeholder={t("metadataForm.placeholders.tags")}
           onKeyDown={(e) => {
             if (e.key === "Enter") {
               addHandler((e.target as HTMLInputElement).value);
@@ -74,8 +76,7 @@ export const MetadataForm: React.FC<MetadataFormProps> = ({
     </div>
   );
 
-  const isImage = metadata?.file_type?.startsWith("image/");
-
+  const isImage = metadata?.file_type?.startsWith("image");
   return (
     <div className="space-y-4">
       {isImage && (
@@ -89,35 +90,35 @@ export const MetadataForm: React.FC<MetadataFormProps> = ({
             }`}
           >
             {showCombinedForm
-              ? "Usar Formulario Simple"
-              : "Usar Formulario Combinado"}
+              ? t("processing.useSimpleForm")
+              : t("processing.useCombinedForm")}
           </button>
           <button
             onClick={() => setShowDeleteOption(!showDeleteOption)}
             className="px-4 py-2 border-4 border-red-500 rounded-lg hover:bg-red-100"
           >
-            {showDeleteOption ? "Cancelar Eliminación" : "Eliminar Archivo"}
+            {showDeleteOption
+              ? t("general.cancel")
+              : t("processing.deleteFile")}
           </button>
         </div>
       )}
 
       {showDeleteOption && (
         <div className="p-4 border-4 border-red-500 rounded-lg bg-red-50">
-          <p className="font-bold mb-2">
-            ¿Estás seguro de que deseas eliminar este archivo?
-          </p>
+          <p className="font-bold mb-2">{t("processing.deleteConfirm")}</p>
           <div className="flex justify-end gap-2">
             <button
               onClick={() => setShowDeleteOption(false)}
               className="px-4 py-2 border-4 border-gray-300 rounded-lg hover:bg-gray-100"
             >
-              Cancelar
+              {t("general.cancel")}
             </button>
             <button
               onClick={onDeleteFile}
               className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
             >
-              Eliminar
+              {t("general.delete")}
             </button>
           </div>
         </div>
@@ -130,37 +131,47 @@ export const MetadataForm: React.FC<MetadataFormProps> = ({
           (metadata.file_type === "image" &&
             metadata.processingMethod !== "image_description") ? (
             <div className="space-y-4 border-4 border-black rounded-lg p-4 bg-white">
-              <h3 className="text-xl font-bold">Metadatos OCR</h3>
+              <h3 className="text-xl font-bold">
+                {t("metadataForm.ocrTitle")}
+              </h3>
               <div>
-                <label className="font-bold">Título</label>
+                <label className="font-bold">
+                  {t("metadataForm.fields.title")}
+                </label>
                 <BrutalInput
                   type="text"
-                  placeholder="Título del contenido"
+                  placeholder={t("metadataForm.placeholders.title")}
                   value={metadata.title || ""}
                   onChange={(e) => updateMetadata({ title: e.target.value })}
                   className="w-full p-2 border-4 border-black rounded-lg"
                 />
               </div>
               <div>
-                <label className="font-bold">Autor</label>
+                <label className="font-bold">
+                  {t("metadataForm.fields.author")}
+                </label>
                 <BrutalInput
                   type="text"
-                  placeholder="Autor del contenido"
+                  placeholder={t("metadataForm.placeholders.author")}
                   value={metadata.author || ""}
                   onChange={(e) => updateMetadata({ author: e.target.value })}
                   className="w-full p-2 border-4 border-black rounded-lg"
                 />
               </div>
               <div>
-                <label className="font-bold">Tags</label>
+                <label className="font-bold">
+                  {t("metadataForm.fields.tags")}
+                </label>
                 {renderTagSection(metadata.tags || [], addTag, removeTag)}
               </div>
 
               <div>
-                <label className="font-bold">Obra/Fuente (work)</label>
+                <label className="font-bold">
+                  {t("metadataForm.fields.work")}
+                </label>
                 <BrutalInput
                   type="text"
-                  placeholder="Obra o fuente"
+                  placeholder={t("metadataForm.placeholders.work")}
                   value={metadata.work || ""}
                   onChange={(e) => updateMetadata({ work: e.target.value })}
                   className="w-full p-2 border-4 border-black rounded-lg"
@@ -168,10 +179,12 @@ export const MetadataForm: React.FC<MetadataFormProps> = ({
               </div>
 
               <div>
-                <label className="font-bold">Idiomas (languages)</label>
+                <label className="font-bold">
+                  {t("metadataForm.fields.languages")}
+                </label>
                 <BrutalInput
                   type="text"
-                  placeholder="Ej: es, en"
+                  placeholder={t("metadataForm.placeholders.languages")}
                   value={(metadata.languages || []).join(", ")}
                   onChange={(e) =>
                     updateMetadata({ languages: e.target.value.split(",") })
@@ -180,10 +193,12 @@ export const MetadataForm: React.FC<MetadataFormProps> = ({
                 />
               </div>
               <div>
-                <label className="font-bold">Sentiment Word</label>
+                <label className="font-bold">
+                  {t("metadataForm.fields.sentiment_word")}
+                </label>
                 <BrutalInput
                   type="text"
-                  placeholder="Ej: positivo, negativo"
+                  placeholder={t("metadataForm.placeholders.sentiment_word")}
                   value={metadata.sentiment_word || ""}
                   onChange={(e) =>
                     updateMetadata({ sentiment_word: e.target.value })
@@ -194,7 +209,7 @@ export const MetadataForm: React.FC<MetadataFormProps> = ({
 
               <div>
                 <label className="font-bold">
-                  Sentiment Value (entre -1 y 1)
+                  {t("metadataForm.fields.sentiment_value")}
                 </label>
                 <BrutalInput
                   type="number"
@@ -211,10 +226,12 @@ export const MetadataForm: React.FC<MetadataFormProps> = ({
                 />
               </div>
               <div>
-                <label className="font-bold">Analysis</label>
+                <label className="font-bold">
+                  {t("metadataForm.fields.analysis")}
+                </label>
                 <BrutalInput
                   type="textarea"
-                  placeholder="Análisis profundo del contenido"
+                  placeholder={t("metadataForm.placeholders.analysis")}
                   value={metadata.analysis || ""}
                   onChange={(e) => updateMetadata({ analysis: e.target.value })}
                   className="w-full p-2 border-4 border-black rounded-lg h-32"
@@ -222,10 +239,12 @@ export const MetadataForm: React.FC<MetadataFormProps> = ({
                 />
               </div>
               <div>
-                <label className="font-bold">Categorías</label>
+                <label className="font-bold">
+                  {t("metadataForm.fields.categories")}
+                </label>
                 <BrutalInput
                   type="text"
-                  placeholder="Categorías separadas por coma"
+                  placeholder={t("metadataForm.placeholders.categories")}
                   value={(metadata.categories || []).join(", ")}
                   onChange={(e) =>
                     updateMetadata({
@@ -238,10 +257,12 @@ export const MetadataForm: React.FC<MetadataFormProps> = ({
                 />
               </div>
               <div>
-                <label className="font-bold">Keywords</label>
+                <label className="font-bold">
+                  {t("metadataForm.fields.keywords")}
+                </label>
                 <BrutalInput
                   type="text"
-                  placeholder="Palabras clave separadas por coma"
+                  placeholder={t("metadataForm.placeholders.keywords")}
                   value={(metadata.keywords || []).join(", ")}
                   onChange={(e) =>
                     updateMetadata({
@@ -253,11 +274,11 @@ export const MetadataForm: React.FC<MetadataFormProps> = ({
               </div>
               <div>
                 <label className="font-bold">
-                  Tipo de contenido (content_type)
+                  {t("metadataForm.fields.content_type")}
                 </label>
                 <BrutalInput
                   type="text"
-                  placeholder="Ej: cita, artículo..."
+                  placeholder={t("metadataForm.placeholders.content_type")}
                   value={metadata.content_type || ""}
                   onChange={(e) =>
                     updateMetadata({ content_type: e.target.value })
@@ -266,7 +287,9 @@ export const MetadataForm: React.FC<MetadataFormProps> = ({
                 />
               </div>
               <div>
-                <label className="font-bold">¿Multilingüe?</label>
+                <label className="font-bold">
+                  {t("metadataForm.fields.multilingual")}
+                </label>
                 <input
                   type="checkbox"
                   checked={metadata.multilingual || false}
@@ -277,10 +300,12 @@ export const MetadataForm: React.FC<MetadataFormProps> = ({
                 />
               </div>
               <div>
-                <label className="font-bold">Contenido limpio (content)</label>
+                <label className="font-bold">
+                  {t("metadataForm.fields.content")}
+                </label>
                 <BrutalInput
                   type="textarea"
-                  placeholder="Texto extraído limpio"
+                  placeholder={t("metadataForm.placeholders.content")}
                   value={metadata.content || ""}
                   onChange={(e) => updateMetadata({ content: e.target.value })}
                   className="w-full p-2 border-4 border-black rounded-lg h-32"
@@ -291,13 +316,15 @@ export const MetadataForm: React.FC<MetadataFormProps> = ({
           ) : metadata.processingMethod === "image_description" ? (
             <div className="space-y-4 border-4 border-black rounded-lg p-4 bg-white">
               <h3 className="text-xl font-bold">
-                Metadatos - Análisis de Imagen
+                {t("metadataForm.imageTitle")}
               </h3>
               <div>
-                <label className="font-bold">Descripción (description)</label>
+                <label className="font-bold">
+                  {t("metadataForm.fields.description")}
+                </label>
                 <BrutalInput
                   type="textarea"
-                  placeholder="Descripción detallada de la imagen"
+                  placeholder={t("metadataForm.placeholders.description")}
                   value={metadata.description || ""}
                   onChange={(e) =>
                     updateMetadata({ description: e.target.value })
@@ -307,14 +334,18 @@ export const MetadataForm: React.FC<MetadataFormProps> = ({
                 />
               </div>
               <div>
-                <label className="font-bold">Tags</label>
+                <label className="font-bold">
+                  {t("metadataForm.fields.tags")}
+                </label>
                 {renderTagSection(metadata.tags || [], addTag, removeTag)}
               </div>
               <div>
-                <label className="font-bold">Temas (topics)</label>
+                <label className="font-bold">
+                  {t("metadataForm.fields.topics")}
+                </label>
                 <BrutalInput
                   type="text"
-                  placeholder="Temas separados por coma"
+                  placeholder={t("metadataForm.placeholders.topics")}
                   value={(metadata.topics || []).join(", ")}
                   onChange={(e) =>
                     updateMetadata({
@@ -325,20 +356,24 @@ export const MetadataForm: React.FC<MetadataFormProps> = ({
                 />
               </div>
               <div>
-                <label className="font-bold">Estilo (style)</label>
+                <label className="font-bold">
+                  {t("metadataForm.fields.style")}
+                </label>
                 <BrutalInput
                   type="text"
-                  placeholder="Descripción del estilo visual"
+                  placeholder={t("metadataForm.placeholders.style")}
                   value={metadata.style || ""}
                   onChange={(e) => updateMetadata({ style: e.target.value })}
                   className="w-full p-2 border-4 border-black rounded-lg h-32"
                 />
               </div>
               <div>
-                <label className="font-bold">Color Palette</label>
+                <label className="font-bold">
+                  {t("metadataForm.fields.color_palette")}
+                </label>
                 <BrutalInput
                   type="text"
-                  placeholder="Colores separados por coma (opcional)"
+                  placeholder={t("metadataForm.placeholders.color_palette")}
                   value={(metadata.color_palette || []).join(", ")}
                   onChange={(e) =>
                     updateMetadata({
@@ -351,10 +386,12 @@ export const MetadataForm: React.FC<MetadataFormProps> = ({
                 />
               </div>
               <div>
-                <label className="font-bold">Composición (composition)</label>
+                <label className="font-bold">
+                  {t("metadataForm.fields.composition")}
+                </label>
                 <BrutalInput
                   type="textarea"
-                  placeholder="Notas sobre la composición de la imagen"
+                  placeholder={t("metadataForm.placeholders.composition")}
                   value={metadata.composition || ""}
                   onChange={(e) =>
                     updateMetadata({ composition: e.target.value })
@@ -368,13 +405,15 @@ export const MetadataForm: React.FC<MetadataFormProps> = ({
             // Formulario para archivos que no son imágenes (videos, PDFs, etc.)
             <div className="space-y-4 border-4 border-black rounded-lg p-4 bg-white">
               <h3 className="text-xl font-bold">
-                Metadatos Generales / Manual
+                {t("metadataForm.generalTitle")}
               </h3>
               <div>
-                <label className="font-bold">Autor</label>
+                <label className="font-bold">
+                  {t("metadataForm.fields.author")}
+                </label>
                 <BrutalInput
                   type="text"
-                  placeholder="Autor del contenido"
+                  placeholder={t("metadataForm.placeholders.author")}
                   value={metadata.author || ""}
                   onChange={(e) => updateMetadata({ author: e.target.value })}
                   className="w-full p-2 border-4 border-black rounded-lg"
@@ -382,25 +421,31 @@ export const MetadataForm: React.FC<MetadataFormProps> = ({
               </div>
 
               <div>
-                <label className="font-bold">Título</label>
+                <label className="font-bold">
+                  {t("metadataForm.fields.title")}
+                </label>
                 <BrutalInput
                   type="text"
-                  placeholder="Título del contenido"
+                  placeholder={t("metadataForm.placeholders.title")}
                   value={metadata.title || ""}
                   onChange={(e) => updateMetadata({ title: e.target.value })}
                   className="w-full p-2 border-4 border-black rounded-lg"
                 />
               </div>
               <div>
-                <label className="font-bold">Tags</label>
+                <label className="font-bold">
+                  {t("metadataForm.fields.tags")}
+                </label>
                 {renderTagSection(metadata.tags || [], addTag, removeTag)}
               </div>
 
               <div>
-                <label className="font-bold">Contenido</label>
+                <label className="font-bold">
+                  {t("metadataForm.fields.content")}
+                </label>
                 <BrutalInput
                   type="textarea"
-                  placeholder="Contenido del archivo"
+                  placeholder={t("metadataForm.placeholders.regularContent")}
                   value={metadata.content || ""}
                   onChange={(e) => updateMetadata({ content: e.target.value })}
                   className="w-full p-2 border-4 border-black rounded-lg h-32"
@@ -409,10 +454,12 @@ export const MetadataForm: React.FC<MetadataFormProps> = ({
               </div>
 
               <div>
-                <label className="font-bold">Sentiment Word</label>
+                <label className="font-bold">
+                  {t("metadataForm.fields.sentiment_word")}
+                </label>
                 <BrutalInput
                   type="text"
-                  placeholder="Ej: positivo, negativo"
+                  placeholder={t("metadataForm.placeholders.sentiment_word")}
                   value={metadata.sentiment_word || ""}
                   onChange={(e) =>
                     updateMetadata({ sentiment_word: e.target.value })
@@ -423,7 +470,7 @@ export const MetadataForm: React.FC<MetadataFormProps> = ({
 
               <div>
                 <label className="font-bold">
-                  Sentiment Value (entre -1 y 1)
+                  {t("metadataForm.fields.sentiment_value")}
                 </label>
                 <BrutalInput
                   type="number"
@@ -440,10 +487,12 @@ export const MetadataForm: React.FC<MetadataFormProps> = ({
                 />
               </div>
               <div>
-                <label className="font-bold">Analysis</label>
+                <label className="font-bold">
+                  {t("metadataForm.fields.analysis")}
+                </label>
                 <BrutalInput
                   type="textarea"
-                  placeholder="Análisis profundo del contenido"
+                  placeholder={t("metadataForm.placeholders.analysis")}
                   value={metadata.analysis || ""}
                   onChange={(e) => updateMetadata({ analysis: e.target.value })}
                   className="w-full p-2 border-4 border-black rounded-lg h-32"
@@ -452,7 +501,9 @@ export const MetadataForm: React.FC<MetadataFormProps> = ({
               </div>
               {metadata.extractedText && (
                 <div>
-                  <label className="font-bold">Texto Extraído</label>
+                  <label className="font-bold">
+                    {t("metadataForm.fields.extractedText")}
+                  </label>
                   <div className="mt-1 p-2 border-4 border-black rounded-lg bg-gray-100 max-h-40 overflow-y-auto">
                     <p className="whitespace-pre-wrap text-sm">
                       {metadata.extractedText}
@@ -467,46 +518,58 @@ export const MetadataForm: React.FC<MetadataFormProps> = ({
         // Formulario combinado para imágenes
         <div className="space-y-4">
           <div className="border-4 border-black rounded-lg p-4 bg-white">
-            <h3 className="text-xl font-bold mb-4">Metadatos OCR</h3>
+            <h3 className="text-xl font-bold mb-4">
+              {t("metadataForm.ocrTitle")}
+            </h3>
             <div>
-              <label className="font-bold">Título</label>
+              <label className="font-bold">
+                {t("metadataForm.fields.title")}
+              </label>
               <BrutalInput
                 type="text"
-                placeholder="Título del contenido"
+                placeholder={t("metadataForm.placeholders.title")}
                 value={metadata.title || ""}
                 onChange={(e) => updateMetadata({ title: e.target.value })}
                 className="w-full p-2 border-4 border-black rounded-lg"
               />
             </div>
             <div>
-              <label className="font-bold">Autor</label>
+              <label className="font-bold">
+                {t("metadataForm.fields.author")}
+              </label>
               <BrutalInput
                 type="text"
-                placeholder="Autor del contenido"
+                placeholder={t("metadataForm.placeholders.author")}
                 value={metadata.author || ""}
                 onChange={(e) => updateMetadata({ author: e.target.value })}
                 className="w-full p-2 border-4 border-black rounded-lg"
               />
             </div>
             <div>
-              <label className="font-bold">Tags</label>
+              <label className="font-bold">
+                {t("metadataForm.fields.tags")}
+              </label>
               {renderTagSection(metadata.tags || [], addTag, removeTag)}
             </div>
             <div>
-              <label className="font-bold">Obra/Fuente (work)</label>
+              <label className="font-bold">
+                {t("metadataForm.fields.work")}
+              </label>
               <BrutalInput
                 type="text"
-                placeholder="Obra o fuente"
+                placeholder={t("metadataForm.placeholders.work")}
                 value={metadata.work || ""}
                 onChange={(e) => updateMetadata({ work: e.target.value })}
                 className="w-full p-2 border-4 border-black rounded-lg"
               />
             </div>
             <div>
-              <label className="font-bold">Idiomas (languages)</label>
+              <label className="font-bold">
+                {t("metadataForm.fields.languages")}
+              </label>
               <BrutalInput
                 type="text"
-                placeholder="Ej: es, en"
+                placeholder={t("metadataForm.placeholders.languages")}
                 value={(metadata.languages || []).join(", ")}
                 onChange={(e) =>
                   updateMetadata({ languages: e.target.value.split(",") })
@@ -515,10 +578,12 @@ export const MetadataForm: React.FC<MetadataFormProps> = ({
               />
             </div>
             <div>
-              <label className="font-bold">Sentiment Word</label>
+              <label className="font-bold">
+                {t("metadataForm.fields.sentiment_word")}
+              </label>
               <BrutalInput
                 type="text"
-                placeholder="Ej: positivo, negativo"
+                placeholder={t("metadataForm.placeholders.sentiment_word")}
                 value={metadata.sentiment_word || ""}
                 onChange={(e) =>
                   updateMetadata({ sentiment_word: e.target.value })
@@ -528,7 +593,7 @@ export const MetadataForm: React.FC<MetadataFormProps> = ({
             </div>
             <div>
               <label className="font-bold">
-                Sentiment Value (entre -1 y 1)
+                {t("metadataForm.fields.sentiment_value")}
               </label>
               <BrutalInput
                 type="number"
@@ -545,10 +610,12 @@ export const MetadataForm: React.FC<MetadataFormProps> = ({
               />
             </div>
             <div>
-              <label className="font-bold">Analysis</label>
+              <label className="font-bold">
+                {t("metadataForm.fields.analysis")}
+              </label>
               <BrutalInput
                 type="textarea"
-                placeholder="Análisis profundo del contenido"
+                placeholder={t("metadataForm.placeholders.analysis")}
                 value={metadata.analysis || ""}
                 onChange={(e) => updateMetadata({ analysis: e.target.value })}
                 className="w-full p-2 border-4 border-black rounded-lg h-32"
@@ -556,10 +623,12 @@ export const MetadataForm: React.FC<MetadataFormProps> = ({
               />
             </div>
             <div>
-              <label className="font-bold">Categorías</label>
+              <label className="font-bold">
+                {t("metadataForm.fields.categories")}
+              </label>
               <BrutalInput
                 type="text"
-                placeholder="Categorías separadas por coma"
+                placeholder={t("metadataForm.placeholders.categories")}
                 value={(metadata.categories || []).join(", ")}
                 onChange={(e) =>
                   updateMetadata({
@@ -570,10 +639,12 @@ export const MetadataForm: React.FC<MetadataFormProps> = ({
               />
             </div>
             <div>
-              <label className="font-bold">Keywords</label>
+              <label className="font-bold">
+                {t("metadataForm.fields.keywords")}
+              </label>
               <BrutalInput
                 type="text"
-                placeholder="Palabras clave separadas por coma"
+                placeholder={t("metadataForm.placeholders.keywords")}
                 value={(metadata.keywords || []).join(", ")}
                 onChange={(e) =>
                   updateMetadata({
@@ -585,11 +656,11 @@ export const MetadataForm: React.FC<MetadataFormProps> = ({
             </div>
             <div>
               <label className="font-bold">
-                Tipo de contenido (content_type)
+                {t("metadataForm.fields.content_type")}
               </label>
               <BrutalInput
                 type="text"
-                placeholder="Ej: cita, artículo..."
+                placeholder={t("metadataForm.placeholders.content_type")}
                 value={metadata.content_type || ""}
                 onChange={(e) =>
                   updateMetadata({ content_type: e.target.value })
@@ -598,7 +669,9 @@ export const MetadataForm: React.FC<MetadataFormProps> = ({
               />
             </div>
             <div>
-              <label className="font-bold">¿Multilingüe?</label>
+              <label className="font-bold">
+                {t("metadataForm.fields.multilingual")}
+              </label>
               <input
                 type="checkbox"
                 checked={metadata.multilingual || false}
@@ -609,10 +682,12 @@ export const MetadataForm: React.FC<MetadataFormProps> = ({
               />
             </div>
             <div>
-              <label className="font-bold">Contenido limpio (content)</label>
+              <label className="font-bold">
+                {t("metadataForm.fields.content")}
+              </label>
               <BrutalInput
                 type="textarea"
-                placeholder="Texto extraído limpio"
+                placeholder={t("metadataForm.placeholders.content")}
                 value={metadata.content || ""}
                 onChange={(e) => updateMetadata({ content: e.target.value })}
                 className="w-full p-2 border-4 border-black rounded-lg h-32"
@@ -623,13 +698,15 @@ export const MetadataForm: React.FC<MetadataFormProps> = ({
 
           <div className="border-4 border-black rounded-lg p-4 bg-white">
             <h3 className="text-xl font-bold mb-4">
-              Metadatos - Análisis de Imagen
+              {t("metadataForm.imageTitle")}
             </h3>
             <div>
-              <label className="font-bold">Descripción (description)</label>
+              <label className="font-bold">
+                {t("metadataForm.fields.description")}
+              </label>
               <BrutalInput
                 type="textarea"
-                placeholder="Descripción detallada de la imagen"
+                placeholder={t("metadataForm.placeholders.description")}
                 value={metadata.description || ""}
                 onChange={(e) =>
                   updateMetadata({ description: e.target.value })
@@ -639,10 +716,12 @@ export const MetadataForm: React.FC<MetadataFormProps> = ({
               />
             </div>
             <div>
-              <label className="font-bold">Temas (topics)</label>
+              <label className="font-bold">
+                {t("metadataForm.fields.topics")}
+              </label>
               <BrutalInput
                 type="text"
-                placeholder="Temas separados por coma"
+                placeholder={t("metadataForm.placeholders.topics")}
                 value={(metadata.topics || []).join(", ")}
                 onChange={(e) =>
                   updateMetadata({
@@ -653,10 +732,12 @@ export const MetadataForm: React.FC<MetadataFormProps> = ({
               />
             </div>
             <div>
-              <label className="font-bold">Estilo (style)</label>
+              <label className="font-bold">
+                {t("metadataForm.fields.style")}
+              </label>
               <BrutalInput
                 type="textarea"
-                placeholder="Descripción del estilo visual"
+                placeholder={t("metadataForm.placeholders.style")}
                 value={metadata.style || ""}
                 onChange={(e) => updateMetadata({ style: e.target.value })}
                 className="w-full p-2 border-4 border-black rounded-lg h-32"
@@ -664,10 +745,12 @@ export const MetadataForm: React.FC<MetadataFormProps> = ({
               />
             </div>
             <div>
-              <label className="font-bold">Color Palette</label>
+              <label className="font-bold">
+                {t("metadataForm.fields.color_palette")}
+              </label>
               <BrutalInput
                 type="text"
-                placeholder="Colores separados por coma (opcional)"
+                placeholder={t("metadataForm.placeholders.color_palette")}
                 value={(metadata.color_palette || []).join(", ")}
                 onChange={(e) =>
                   updateMetadata({
@@ -680,10 +763,12 @@ export const MetadataForm: React.FC<MetadataFormProps> = ({
               />
             </div>
             <div>
-              <label className="font-bold">Composición (composition)</label>
+              <label className="font-bold">
+                {t("metadataForm.fields.composition")}
+              </label>
               <BrutalInput
                 type="textarea"
-                placeholder="Notas sobre la composición de la imagen"
+                placeholder={t("metadataForm.placeholders.composition")}
                 value={metadata.composition || ""}
                 onChange={(e) =>
                   updateMetadata({ composition: e.target.value })

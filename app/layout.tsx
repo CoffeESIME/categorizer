@@ -1,6 +1,9 @@
-import type { Metadata } from "next";
+import { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import LanguageSelector from "./components/LanguageSelector";
+import { I18nProvider } from "./i18n/provider";
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -13,7 +16,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Categorizer",
-  description: "Categories",
+  description: "A categorizer app",
 };
 
 export default function RootLayout({
@@ -24,10 +27,15 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-white`}
       >
-        <div id="modal-root"></div>
-        {children}
+        <I18nProvider>
+          <div className="absolute bottom-4 right-4 z-50">
+            <LanguageSelector />
+          </div>
+          <div id="modal-root"></div>
+          {children}
+        </I18nProvider>
       </body>
     </html>
   );

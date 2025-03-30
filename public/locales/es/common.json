@@ -1,0 +1,140 @@
+{
+  "general": {
+    "languageSelector": "Cambiar idioma",
+    "english": "Inglés",
+    "spanish": "Español",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "confirm": "Confirmar",
+    "back": "Volver",
+    "next": "Siguiente",
+    "previous": "Anterior",
+    "loading": "Cargando...",
+    "success": "¡Éxito!",
+    "error": "Error"
+  },
+  "nav": {
+    "home": "Inicio",
+    "upload": "Subir Archivos",
+    "process": "Procesar",
+    "visualizer": "Visualizador",
+    "pending": "Pendientes",
+    "search": "Búsqueda"
+  },
+  "homepage": {
+    "title": "Bienvenido a Categorizer",
+    "subtitle": "Una herramienta para gestionar y categorizar archivos",
+    "startButton": "Comenzar"
+  },
+  "upload": {
+    "title": "Subir Archivos",
+    "dragDrop": "Arrastra y suelta tus archivos aquí",
+    "browse": "o haz clic para seleccionar",
+    "uploading": "Subiendo archivos...",
+    "uploadSuccess": "Archivos subidos correctamente",
+    "uploadError": "Error al subir los archivos",
+    "continue": "Continuar al procesamiento"
+  },
+  "processing": {
+    "title": "Procesar Archivos",
+    "subtitle": "Selecciona un archivo y configura sus opciones de procesamiento",
+    "filesProcessed": "{{count}} de {{total}} archivos procesados",
+    "saveMetadata": "Guardar Metadatos",
+    "savingNotAllowed": "Faltan {{count}} archivos por procesar",
+    "saveComplete": "Metadatos guardados correctamente",
+    "deleteFile": "Eliminar Archivo",
+    "deleteConfirm": "¿Estás seguro de que deseas eliminar este archivo?",
+    "useSimpleForm": "Usar Formulario Simple",
+    "useCombinedForm": "Usar Formulario Combinado"
+  },
+  "processOptions": {
+    "title": "Opciones de Procesamiento",
+    "method": "Método de Procesamiento",
+    "manual": "Manual",
+    "ocr": "OCR",
+    "llm": "LLM",
+    "imageDescription": "Descripción de Imagen",
+    "model": "Modelo",
+    "temperature": "Temperatura",
+    "processWithLLM": "Procesar con LLM",
+    "processWithOCR": "Procesar con OCR",
+    "autoFields": "Campos Automáticos"
+  },
+  "metadataForm": {
+    "ocrTitle": "Metadatos OCR",
+    "imageTitle": "Metadatos - Análisis de Imagen",
+    "generalTitle": "Metadatos Generales / Manual",
+    "fields": {
+      "title": "Título",
+      "author": "Autor",
+      "tags": "Tags",
+      "addTag": "Agregar tag",
+      "work": "Obra/Fuente (work)",
+      "languages": "Idiomas (languages)",
+      "sentiment_word": "Sentiment Word",
+      "sentiment_value": "Sentiment Value (entre -1 y 1)",
+      "analysis": "Analysis",
+      "categories": "Categorías",
+      "keywords": "Keywords",
+      "content_type": "Tipo de contenido (content_type)",
+      "multilingual": "¿Multilingüe?",
+      "content": "Contenido limpio (content)",
+      "description": "Descripción (description)",
+      "topics": "Temas (topics)",
+      "style": "Estilo (style)",
+      "color_palette": "Paleta de Colores",
+      "composition": "Composición (composition)",
+      "extractedText": "Texto Extraído"
+    },
+    "placeholders": {
+      "title": "Título del contenido",
+      "author": "Autor del contenido",
+      "tags": "Agregar tag",
+      "work": "Obra o fuente",
+      "languages": "Ej: es, en",
+      "sentiment_word": "Ej: positivo, negativo",
+      "categories": "Categorías separadas por coma",
+      "keywords": "Palabras clave separadas por coma",
+      "content_type": "Ej: cita, artículo...",
+      "content": "Texto extraído limpio",
+      "description": "Descripción detallada de la imagen",
+      "topics": "Temas separados por coma",
+      "style": "Descripción del estilo visual",
+      "color_palette": "Colores separados por coma (opcional)",
+      "composition": "Notas sobre la composición de la imagen",
+      "regularContent": "Contenido del archivo",
+      "analysis": "Análisis profundo del contenido"
+    }
+  },
+  "fileList": {
+    "title": "Lista de Archivos",
+    "status": {
+      "completed": "Completado",
+      "pending": "Pendiente",
+      "processing": "Procesando"
+    }
+  },
+  "visualizer": {
+    "title": "Visualizador",
+    "zoomIn": "Acercar",
+    "zoomOut": "Alejar",
+    "resetView": "Restablecer vista",
+    "noData": "No hay datos para visualizar"
+  },
+  "pending": {
+    "title": "Archivos Pendientes",
+    "noFiles": "No hay archivos pendientes",
+    "status": "Estado",
+    "uploadedDate": "Fecha de subida",
+    "details": "Ver detalles"
+  },
+  "search": {
+    "title": "Búsqueda",
+    "placeholder": "Buscar...",
+    "filters": "Filtros",
+    "noResults": "No se encontraron resultados",
+    "searchButton": "Buscar"
+  }
+}
