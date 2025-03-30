@@ -6,6 +6,7 @@ import {
   RelationshipProperty,
   DEFAULT_RELATIONSHIP_PROPERTIES,
 } from "../types/relationshipTypes";
+import { NodeConnection } from "../types/nodeTypes";
 
 // Tipos base ya existentes
 export interface FileMetadata {
@@ -248,9 +249,9 @@ class CategorizerAPI {
   }
 
   // Función para obtener las conexiones de un nodo específico
-  async fetchNodeConnections(nodeId: string): Promise<DocumentNode[]> {
+  async fetchNodeConnections(nodeId: string): Promise<NodeConnection[]> {
     try {
-      const response = await axios.get<DocumentNode[]>(
+      const response = await axios.get<NodeConnection[]>(
         `${this.baseUrl}/nodes/${nodeId}/connections`,
         { headers: this.headers }
       );
@@ -329,21 +330,21 @@ class CategorizerAPI {
 
   // DELETE /nodes/:nodeId/connections/:connectionNodeId - elimina la conexión
   async deleteNodeConnection(
-    nodeId: string,
-    connectionNodeId: string,
-    relationshipType?: string
+    targetId: string,
+    sourceId: string,
+    relationshipType: string
   ): Promise<void> {
     try {
-      // Si se proporciona un tipo de relación, lo incluimos en la solicitud
-      const params = relationshipType ? { relationshipType } : {};
+      const payload = {
+        sourceId: sourceId,
+        targetId: targetId,
+        relationshipType: relationshipType,
+      };
 
-      await axios.delete(
-        `${this.baseUrl}/nodes/${nodeId}/connections-actions/${connectionNodeId}`,
-        {
-          headers: this.headers,
-          params,
-        }
-      );
+      await axios.delete(`${this.baseUrl}/nodes/delete-relationship`, {
+        headers: this.headers,
+        data: payload,
+      });
     } catch (error) {
       console.error("Error al eliminar la conexión", error);
       throw error;

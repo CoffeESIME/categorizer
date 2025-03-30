@@ -54,7 +54,6 @@ const BrutalDropDown: React.FC<DropDownProps> = ({
     onSelect(value);
     setOpen(false);
   };
-
   return (
     <div className="relative inline-block text-left">
       <div>

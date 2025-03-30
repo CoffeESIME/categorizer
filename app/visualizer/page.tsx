@@ -126,13 +126,49 @@ export default function DocumentGraphVisualization() {
       </div>
 
       <div className="flex-1 p-4 bg-[#FFFCD6]  origin-top-left transform">
-        <div className="border-4 border-black p-2 rounded-md bg-[#FFFFFF]">
+        <div className="border-4 border-black p-2 rounded-md bg-[#FFFFFF] relative">
           {loading ? (
             <p className="text-center">Cargando datos...</p>
-          ) : graphMode === "unconnected" ? (
-            <svg ref={unconnectedGraph.svgRef} />
           ) : (
-            <svg ref={fullGraph.svgRef} />
+            <>
+              <div className="absolute top-4 right-4 flex gap-2 z-10">
+                <BrutalButton
+                  variant="blue"
+                  onClick={() =>
+                    graphMode === "unconnected"
+                      ? unconnectedGraph.zoomIn()
+                      : fullGraph.zoomIn()
+                  }
+                >
+                  Zoom +
+                </BrutalButton>
+                <BrutalButton
+                  variant="blue"
+                  onClick={() =>
+                    graphMode === "unconnected"
+                      ? unconnectedGraph.zoomOut()
+                      : fullGraph.zoomOut()
+                  }
+                >
+                  Zoom -
+                </BrutalButton>
+                <BrutalButton
+                  variant="blue"
+                  onClick={() =>
+                    graphMode === "unconnected"
+                      ? unconnectedGraph.resetView()
+                      : fullGraph.resetView()
+                  }
+                >
+                  Reset
+                </BrutalButton>
+              </div>
+              {graphMode === "unconnected" ? (
+                <svg ref={unconnectedGraph.svgRef} />
+              ) : (
+                <svg ref={fullGraph.svgRef} />
+              )}
+            </>
           )}
         </div>
       </div>

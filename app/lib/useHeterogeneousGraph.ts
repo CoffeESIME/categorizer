@@ -50,6 +50,8 @@ export function useHeterogeneousGraph({
   const simulationRef = useRef<d3.Simulation<NodeDatum, LinkDatum> | null>(
     null
   );
+  const zoomRef = useRef<d3.ZoomBehavior<SVGSVGElement, unknown> | null>(null);
+  const transformRef = useRef<d3.ZoomTransform>(d3.zoomIdentity);
 
   // Convertir nodos heterogéneos a NodeDatum para D3
   const convertToGraphData = (
@@ -113,6 +115,20 @@ export function useHeterogeneousGraph({
       .attr("viewBox", `0 0 ${width} ${height}`)
       .attr("style", "max-width: 100%; height: auto; background: #fff");
 
+    // Add zoom behavior
+    zoomRef.current = d3
+      .zoom<SVGSVGElement, unknown>()
+      .scaleExtent([0.1, 4])
+      .on("zoom", (event) => {
+        transformRef.current = event.transform;
+        g.attr("transform", event.transform);
+      });
+
+    svg.call(zoomRef.current);
+
+    // Create a group for zooming
+    const g = svg.append("g");
+
     // Crear la simulación de fuerza
     const simulation = d3
       .forceSimulation<NodeDatum>(graphData.nodes)
@@ -129,7 +145,7 @@ export function useHeterogeneousGraph({
     simulationRef.current = simulation;
 
     // Dibujar links
-    const link = svg
+    const link = g
       .append("g")
       .selectAll("line")
       .data(graphData.links)
@@ -138,7 +154,7 @@ export function useHeterogeneousGraph({
       .attr("stroke-width", 2);
 
     // Dibujar texto de links
-    const linkText = svg
+    const linkText = g
       .append("g")
       .selectAll("text")
       .data(graphData.links)
@@ -150,7 +166,7 @@ export function useHeterogeneousGraph({
       .attr("dy", -3);
 
     // Dibujar nodos
-    const node = svg
+    const node = g
       .append("g")
       .selectAll("circle")
       .data(graphData.nodes)
@@ -167,7 +183,7 @@ export function useHeterogeneousGraph({
       });
 
     // Dibujar etiquetas de nodos
-    const nodeLabel = svg
+    const nodeLabel = g
       .append("g")
       .selectAll("text")
       .data(graphData.nodes)
@@ -237,17 +253,33 @@ export function useHeterogeneousGraph({
     };
   }, [nodes, edges, width, height, onNodeClick]);
 
+  // Implementación de las funciones de control
+  const zoomIn = () => {
+    if (svgRef.current && zoomRef.current) {
+      d3.select(svgRef.current).transition().call(zoomRef.current.scaleBy, 1.2);
+    }
+  };
+
+  const zoomOut = () => {
+    if (svgRef.current && zoomRef.current) {
+      d3.select(svgRef.current).transition().call(zoomRef.current.scaleBy, 0.8);
+    }
+  };
+
+  const resetView = () => {
+    if (svgRef.current && zoomRef.current) {
+      d3.select(svgRef.current)
+        .transition()
+        .call(zoomRef.current.transform, d3.zoomIdentity);
+      transformRef.current = d3.zoomIdentity;
+    }
+  };
+
   return {
     svgRef,
     simulation: simulationRef.current,
-    zoomIn: () => {
-      // Implementa la lógica de zoom in si es necesario
-    },
-    zoomOut: () => {
-      // Implementa la lógica de zoom out si es necesario
-    },
-    resetView: () => {
-      // Implementa la lógica para resetear la vista
-    },
+    zoomIn,
+    zoomOut,
+    resetView,
   };
 }

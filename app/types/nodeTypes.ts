@@ -18,6 +18,7 @@ export interface DocumentNode extends BaseNode {
   tags?: string[];
   topics?: string[];
   style?: string;
+  relationshipType?: string;
 }
 
 export interface AuthorNode extends BaseNode {
@@ -50,4 +51,8 @@ export interface NodeType {
 export interface CreateNodeData {
   type: NodeType | null;
   properties: Record<string, string>;
+}
+
+export interface NodeConnection extends DocumentNode {
+  relationshipType: string;
 }

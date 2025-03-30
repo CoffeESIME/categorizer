@@ -40,6 +40,8 @@ export function useDocumentGraph({
   const simulationRef = useRef<d3.Simulation<NodeDatum, LinkDatum> | null>(
     null
   );
+  const zoomRef = useRef<d3.ZoomBehavior<SVGSVGElement, unknown> | null>(null);
+  const transformRef = useRef<d3.ZoomTransform>(d3.zoomIdentity);
 
   // Convert documents to nodes and links for D3
   const convertToGraphData = (
@@ -109,6 +111,20 @@ export function useDocumentGraph({
       .attr("viewBox", [0, 0, width, height])
       .attr("style", "max-width: 100%; height: auto; background: #fff");
 
+    // Add zoom behavior
+    zoomRef.current = d3
+      .zoom<SVGSVGElement, unknown>()
+      .scaleExtent([0.1, 4])
+      .on("zoom", (event) => {
+        transformRef.current = event.transform;
+        svg.attr("transform", event.transform);
+      });
+
+    svg.call(zoomRef.current);
+
+    // Create a group for zooming
+    const g = svg.append("g");
+
     // Force simulation
     const newSimulation = d3
       .forceSimulation<NodeDatum>(graphData.nodes)
@@ -125,7 +141,7 @@ export function useDocumentGraph({
     simulationRef.current = newSimulation;
 
     // Links
-    const link = svg
+    const link = g
       .append("g")
       .selectAll("line")
       .data(graphData.links)
@@ -135,7 +151,7 @@ export function useDocumentGraph({
       .attr("stroke-dasharray", "5,3");
 
     // Link text
-    const linkText = svg
+    const linkText = g
       .append("g")
       .selectAll("text")
       .data(graphData.links)
@@ -147,7 +163,7 @@ export function useDocumentGraph({
       .attr("dy", -3);
 
     // Nodes
-    const node = svg
+    const node = g
       .append("g")
       .selectAll<SVGCircleElement, NodeDatum>("circle")
       .data(graphData.nodes)
@@ -164,7 +180,7 @@ export function useDocumentGraph({
       });
 
     // Node labels
-    const nodeLabel = svg
+    const nodeLabel = g
       .append("g")
       .selectAll("text")
       .data(graphData.nodes)
@@ -229,17 +245,26 @@ export function useDocumentGraph({
     };
   }, [documents, width, height, onNodeClick]);
 
-  // Expose methods to control the graph externally if needed
+  // Implementación de las funciones de control
   const zoomIn = () => {
-    // Implementation for zooming in
+    if (svgRef.current && zoomRef.current) {
+      d3.select(svgRef.current).transition().call(zoomRef.current.scaleBy, 1.2);
+    }
   };
 
   const zoomOut = () => {
-    // Implementation for zooming out
+    if (svgRef.current && zoomRef.current) {
+      d3.select(svgRef.current).transition().call(zoomRef.current.scaleBy, 0.8);
+    }
   };
 
   const resetView = () => {
-    // Implementation for resetting view
+    if (svgRef.current && zoomRef.current) {
+      d3.select(svgRef.current)
+        .transition()
+        .call(zoomRef.current.transform, d3.zoomIdentity);
+      transformRef.current = d3.zoomIdentity;
+    }
   };
 
   return {

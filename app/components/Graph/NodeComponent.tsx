@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { DocumentNode, NodeType } from "@/app/types/nodeTypes";
+import { DocumentNode, NodeType, NodeConnection } from "@/app/types/nodeTypes";
 import BrutalDropDown from "../DropDownComponent/DropdownComponent";
 import { BrutalInput } from "../InputComponent/InputComponent";
 import { BrutalButton } from "../ButtonComponent/ButtonComponent";
@@ -107,9 +107,9 @@ export const NodeDetailsPanel: React.FC<NodeDetailsPanelProps> = ({
   const [activeTab, setActiveTab] = useState<"update" | "connect">("update");
   const [nodeTypes, setNodeTypes] = useState<NodeType[]>([]);
 
-  const [currentConnections, setCurrentConnections] = useState<DocumentNode[]>(
-    []
-  );
+  const [currentConnections, setCurrentConnections] = useState<
+    NodeConnection[]
+  >([]);
   const [possibleConnections, setPossibleConnections] = useState<
     DocumentNode[]
   >([]);
@@ -184,7 +184,12 @@ export const NodeDetailsPanel: React.FC<NodeDetailsPanelProps> = ({
           const connections = await categorizerAPI.fetchNodeConnections(
             selectedNode.id
           );
-          setCurrentConnections(connections);
+          const connectionsWithType = connections.map((connection) => ({
+            ...connection,
+            relationshipType: (connection.relationshipType ??
+              "RELATES_TO") as string,
+          }));
+          setCurrentConnections(connectionsWithType);
         } catch (error) {
           console.error("Error al cargar conexiones:", error);
         }
@@ -284,9 +289,24 @@ export const NodeDetailsPanel: React.FC<NodeDetailsPanelProps> = ({
     }
   };
 
-  const handleDeleteConnection = async (connectionNodeId: string) => {
+  const handleDeleteConnection = async (
+    connectionNodeId: string,
+    relationshipType: string
+  ) => {
     if (!selectedNode.id) return;
-    // Llamada a la API para eliminar la conexión usando connectionNodeId
+    try {
+      await categorizerAPI.deleteNodeConnection(
+        connectionNodeId,
+        selectedNode.id,
+        relationshipType
+      );
+      const connections = await categorizerAPI.fetchNodeConnections(
+        selectedNode.id
+      );
+      setCurrentConnections(connections);
+    } catch (error) {
+      console.error("Error al eliminar conexión:", error);
+    }
   };
 
   const formatField = (label: string, value: any) => {
@@ -299,11 +319,6 @@ export const NodeDetailsPanel: React.FC<NodeDetailsPanelProps> = ({
       </div>
     );
   };
-  console.log(
-    "this is what i want to connect ",
-    selectedConnectionDisplay,
-    selectedConnectionId
-  );
   const searchField = searchFieldMapping[selectedConnectionType] || "title";
 
   return (
@@ -394,7 +409,12 @@ export const NodeDetailsPanel: React.FC<NodeDetailsPanelProps> = ({
                           `Nodo sin título (ID: ${connection.id})`}
                       </span>
                       <BrutalButton
-                        onClick={() => handleDeleteConnection(connection.id)}
+                        onClick={() =>
+                          handleDeleteConnection(
+                            connection.id,
+                            connection.relationshipType
+                          )
+                        }
                         variant="red"
                         className="ml-2"
                       >
