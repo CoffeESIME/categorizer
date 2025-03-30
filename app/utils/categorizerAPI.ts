@@ -66,7 +66,7 @@ export interface OCRResult {
 // Tipos extra
 export type TaskType = "text" | "image_description" | "ocr";
 export type OCRMethod = "tesseract" | "llm";
-export type ProcessingMethod = "manual" | "llm" | "ocr";
+export type ProcessingMethod = "manual" | "llm" | "ocr" | "image_description";
 
 // Interfaz para la creación de relaciones
 export interface CreateRelationshipData {

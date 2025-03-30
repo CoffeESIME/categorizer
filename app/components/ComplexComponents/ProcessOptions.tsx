@@ -5,6 +5,8 @@ import CustomCheckbox from "../CheckBoxComponent/CheckBoxComponent";
 import { BrutalInput } from "../InputComponent/InputComponent";
 import BrutalButton from "../ButtonComponent/ButtonComponent";
 import BrutalDropDown from "../DropDownComponent/DropdownComponent";
+import { ProcessingMethod } from "../../utils/categorizerAPI";
+
 interface AutoFields {
   [key: string]: boolean;
   author: boolean;
@@ -12,7 +14,13 @@ interface AutoFields {
   content: boolean;
   tags: boolean;
   sentiment: boolean;
+  description: boolean;
+  topics: boolean;
+  style: boolean;
+  color_palette: boolean;
+  composition: boolean;
 }
+
 interface ProcessOptionsProps {
   currentFile: any;
   isProcessing: boolean;
@@ -28,6 +36,7 @@ interface ProcessOptionsProps {
   llmModelOptions: { label: string; value: string }[];
   getProcessingOptions: (file: any) => string[];
   updateMetadata: (updates: any) => void;
+  onProcessingMethodChange: (method: ProcessingMethod) => void;
 }
 
 export const ProcessOptions: React.FC<ProcessOptionsProps> = ({
@@ -42,12 +51,16 @@ export const ProcessOptions: React.FC<ProcessOptionsProps> = ({
   llmModelOptions,
   getProcessingOptions,
   updateMetadata,
+  onProcessingMethodChange,
 }) => {
   if (!currentFile) return null;
   const availableProcessingOptions = getProcessingOptions(currentFile);
   const [selectedProcessingOption, setSelectedProcessingOption] =
     useState<string>("");
   const [renderFields, setRenderFields] = useState<string[]>([]);
+  const [selectedMethod, setSelectedMethod] =
+    useState<ProcessingMethod>("manual");
+
   useEffect(() => {
     if (availableProcessingOptions.length > 0) {
       setSelectedProcessingOption(availableProcessingOptions[0]);
@@ -93,6 +106,7 @@ export const ProcessOptions: React.FC<ProcessOptionsProps> = ({
     }
     return llmModelOptions;
   };
+
   const fieldLabels: Record<string, string> = {
     author: "Autor",
     title: "Título",
@@ -105,11 +119,14 @@ export const ProcessOptions: React.FC<ProcessOptionsProps> = ({
     color_palette: "Paleta de Colores",
     composition: "Composición",
   };
+
   const handleSelect = (value: string) => {
     setSelectedProcessingOption(value);
     updateMetadata({ processingMethod: value });
   };
+
   const currentModelOptions = getModelOptions();
+
   useEffect(() => {
     switch (selectedProcessingOption) {
       case "ocr":
@@ -130,6 +147,7 @@ export const ProcessOptions: React.FC<ProcessOptionsProps> = ({
         break;
     }
   }, [selectedProcessingOption]);
+
   useEffect(() => {
     const options = getModelOptions();
     if (
@@ -140,107 +158,109 @@ export const ProcessOptions: React.FC<ProcessOptionsProps> = ({
     }
   }, [selectedProcessingOption]);
 
-  const handleProcessClick = () => {
-    switch (selectedProcessingOption) {
-      case "ocr":
-        processWithOCR();
-        break;
-      case "image_description":
-      case "llm":
-        processWithLLM();
-        break;
-      case "manual":
-        break;
-    }
+  const handleMethodChange = (method: ProcessingMethod) => {
+    setSelectedMethod(method);
+    onProcessingMethodChange(method);
   };
+
   return (
-    <div className="border-4 border-black rounded-lg p-4 bg-white">
-      <h3 className="text-xl font-bold mb-2">Opciones de procesamiento</h3>
-      <div className="space-y-3">
-        <div className="mb-4">
-          <label className="font-bold block mb-2">Tipo de procesamiento:</label>
-          <BrutalDropDown
-            buttonLabel={
-              processingOptionsForDropdown.find(
-                (option) => option.value === selectedProcessingOption
-              )?.label || "Seleccionar"
-            }
-            options={processingOptionsForDropdown}
-            onSelect={(value) => {
-              handleSelect(value);
-            }}
-          />
-        </div>
-
-        <BrutalButton
-          onClick={handleProcessClick}
-          disabled={isProcessing || !selectedProcessingOption}
-          variant={selectedProcessingOption === "ocr" ? "blue" : "purple"}
-          className="w-full"
-        >
-          {isProcessing
-            ? "Procesando..."
-            : `Procesar con ${
-                processingOptionsForDropdown.find(
-                  (option) => option.value === selectedProcessingOption
-                )?.label || ""
+    <div className="space-y-4 border-4 border-black rounded-lg p-4 bg-white">
+      <h3 className="text-xl font-bold">Opciones de Procesamiento</h3>
+      <div className="space-y-2">
+        <label className="font-bold">Método de Procesamiento:</label>
+        <div className="flex flex-wrap gap-2">
+          {getProcessingOptions(currentFile).map((option) => (
+            <button
+              key={option}
+              onClick={() => handleMethodChange(option as ProcessingMethod)}
+              className={`px-4 py-2 border-4 rounded-lg ${
+                selectedMethod === option
+                  ? "border-blue-500 bg-blue-100"
+                  : "border-gray-300 hover:bg-gray-100"
               }`}
-        </BrutalButton>
-
-        <div className="mt-4 p-3 border-2 border-black rounded-lg bg-yellow-100">
-          <h4 className="font-bold">Campos a extraer automáticamente:</h4>
-          <div className="grid grid-cols-2 gap-2 mt-2">
-            {renderFields.map((field) => {
-              return (
-                <CustomCheckbox
-                  key={field}
-                  defaultChecked={autoFields[field]}
-                  onChange={() => toggleAutoField(field)}
-                  label={fieldLabels[field] || field}
-                />
-              );
-            })}
-          </div>
-        </div>
-
-        <div className="mt-4 p-3 border-2 border-black rounded-lg bg-yellow-100">
-          <h4 className="font-bold">Configuración del LLM:</h4>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-2">
-            <div>
-              <label className="font-bold">Modelo</label>
-              <BrutalDropDown
-                buttonLabel={llmConfig.model}
-                options={
-                  currentModelOptions.length > 0
-                    ? currentModelOptions
-                    : llmModelOptions
-                }
-                onSelect={(value) =>
-                  setLlmConfig({ ...llmConfig, model: value })
-                }
-              />
-            </div>
-          </div>
-          <div>
-            <label className="font-bold">Temperatura</label>
-            <BrutalInput
-              type="number"
-              placeholder="Temperatura"
-              value={llmConfig.temperature}
-              onChange={(e) =>
-                setLlmConfig({
-                  ...llmConfig,
-                  temperature: parseFloat(e.target.value),
-                })
-              }
-              className="w-full p-2 border-4 border-black rounded-lg"
-              step="0.1"
-              min="0"
-              max="1"
-            />
-          </div>
+            >
+              {option === "ocr"
+                ? "OCR"
+                : option === "image_description"
+                ? "Descripción de Imagen"
+                : option === "llm"
+                ? "LLM"
+                : "Manual"}
+            </button>
+          ))}
         </div>
       </div>
+
+      {selectedMethod !== "manual" && (
+        <>
+          <div className="space-y-2">
+            <label className="font-bold">Modelo LLM:</label>
+            <BrutalDropDown
+              options={llmModelOptions}
+              buttonLabel={llmConfig.model}
+              onSelect={(value: string) =>
+                setLlmConfig({ ...llmConfig, model: value })
+              }
+            />
+          </div>
+          <div className="space-y-2">
+            <label className="font-bold">Temperatura:</label>
+            <div className="flex items-center gap-2">
+              <input
+                type="range"
+                min="0"
+                max="1"
+                step="0.1"
+                value={llmConfig.temperature}
+                onChange={(e) =>
+                  setLlmConfig({
+                    ...llmConfig,
+                    temperature: parseFloat(e.target.value),
+                  })
+                }
+                className="flex-1"
+              />
+              <span className="min-w-[3rem] text-right">
+                {llmConfig.temperature.toFixed(1)}
+              </span>
+            </div>
+          </div>
+          <div className="space-y-2">
+            <label className="font-bold">Campos Automáticos:</label>
+            <div className="grid grid-cols-2 gap-2">
+              {Object.entries(autoFields).map(([field, value]) => (
+                <CustomCheckbox
+                  key={field}
+                  label={field}
+                  checked={value}
+                  onChange={() => toggleAutoField(field)}
+                />
+              ))}
+            </div>
+          </div>
+          <div className="flex gap-2">
+            {selectedMethod === "ocr" && (
+              <BrutalButton
+                onClick={processWithOCR}
+                disabled={isProcessing}
+                variant="blue"
+              >
+                {isProcessing ? "Procesando..." : "Procesar con OCR"}
+              </BrutalButton>
+            )}
+            {(selectedMethod === "llm" ||
+              selectedMethod === "image_description") && (
+              <BrutalButton
+                onClick={processWithLLM}
+                disabled={isProcessing}
+                variant="blue"
+              >
+                {isProcessing ? "Procesando..." : "Procesar con LLM"}
+              </BrutalButton>
+            )}
+          </div>
+        </>
+      )}
     </div>
   );
 };

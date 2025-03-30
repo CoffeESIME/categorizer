@@ -14,6 +14,7 @@ import { FilePreview } from "../components/ComplexComponents/FilePreview";
 import { ProcessOptions } from "../components/ComplexComponents/ProcessOptions";
 import { MetadataForm } from "../components/ComplexComponents/MetadataForm";
 import { useConfigStore } from "../store/configStore";
+import { useRouter } from "next/navigation";
 
 export type FileMetadata = {
   id: string;
@@ -64,6 +65,9 @@ export default function ProcessFiles() {
     Record<string, FileMetadata>
   >({});
   const [currentFileId, setCurrentFileId] = useState<string | null>(null);
+  const [processedCount, setProcessedCount] = useState(0);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [fileToDelete, setFileToDelete] = useState<string | null>(null);
 
   const [autoFields, setAutoFields] = useState<AutoFields>({
     author: true,
@@ -84,6 +88,7 @@ export default function ProcessFiles() {
     temperature: 0.7,
   });
   const [isProcessing, setIsProcessing] = useState(false);
+  const router = useRouter();
 
   const llmModelOptions = [
     ...getModelsByGroup("Text Generation Models"),
@@ -119,6 +124,7 @@ export default function ProcessFiles() {
       };
     });
     setFileMetadata(initialMetadata);
+    setProcessedCount(0);
 
     if (files.length > 0) {
       setCurrentFileId(files[0].original_name);
@@ -166,13 +172,43 @@ export default function ProcessFiles() {
   };
   const updateCurrentFileMetadata = (updates: Partial<FileMetadata>) => {
     if (!currentFileId) return;
-    setFileMetadata((prev) => ({
-      ...prev,
-      [currentFileId]: {
-        ...prev[currentFileId],
-        ...updates,
-      },
-    }));
+    setFileMetadata((prev) => {
+      const newMetadata = {
+        ...prev,
+        [currentFileId]: {
+          ...prev[currentFileId],
+          ...updates,
+        },
+      };
+
+      // Si el método es manual y hay datos en el formulario, marcar como completado
+      const currentMetadata = newMetadata[currentFileId];
+      if (currentMetadata.processingMethod === "manual") {
+        const hasData = Object.entries(currentMetadata).some(([key, value]) => {
+          // Ignorar campos que no son relevantes para la validación
+          if (
+            key === "id" ||
+            key === "processingStatus" ||
+            key === "processingMethod" ||
+            key === "tags"
+          ) {
+            return false;
+          }
+          // Verificar si hay datos en el campo
+          if (Array.isArray(value)) {
+            return value.length > 0;
+          }
+          return value !== undefined && value !== "";
+        });
+
+        if (hasData) {
+          currentMetadata.processingStatus = "completed";
+        }
+      }
+
+      setTimeout(updateProcessedCount, 0);
+      return newMetadata;
+    });
   };
   const processWithLLMUnified = async (
     taskType: TaskType = "image_description",
@@ -316,11 +352,28 @@ export default function ProcessFiles() {
     processWithLLMUnified("ocr", "tesseract");
   };
 
+  const updateProcessedCount = () => {
+    const completedCount = Object.values(fileMetadata).filter(
+      (metadata) => metadata.processingStatus === "completed"
+    ).length;
+    setProcessedCount(completedCount);
+  };
+
   const saveAllMetadata = async () => {
+    if (processedCount < files.length) {
+      alert(
+        `No se pueden guardar los metadatos hasta que todos los archivos estén procesados. Faltan ${
+          files.length - processedCount
+        } archivos por procesar.`
+      );
+      return;
+    }
+
     setIsProcessing(true);
     try {
       const allMetadata = Object.values(fileMetadata);
       await categorizerAPI.saveFilesMetadata(allMetadata);
+      router.push("/pending");
     } catch (error) {
       console.error("Error al guardar metadatos:", error);
       alert("Error guardando metadatos. Intenta nuevamente.");
@@ -367,6 +420,33 @@ export default function ProcessFiles() {
     });
   };
 
+  // Agregar función para manejar el cambio de método de procesamiento
+  const handleProcessingMethodChange = (method: ProcessingMethod) => {
+    if (!currentFileId) return;
+    updateCurrentFileMetadata({
+      processingMethod: method,
+      processingStatus: method === "manual" ? "pending" : "processing",
+    });
+  };
+
+  const handleDeleteFile = (id: string) => {
+    setFileToDelete(id);
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDeleteFile = () => {
+    if (fileToDelete) {
+      setFileMetadata((prev) => {
+        const newMetadata = { ...prev };
+        delete newMetadata[fileToDelete];
+        setTimeout(updateProcessedCount, 0);
+        return newMetadata;
+      });
+      setShowDeleteConfirm(false);
+      setFileToDelete(null);
+    }
+  };
+
   return (
     <div className="container mx-auto p-4 min-h-screen flex flex-col bg-yellow-100">
       <TitleComponent title="Procesar Archivos" variant="neobrutalism" />
@@ -379,6 +459,13 @@ export default function ProcessFiles() {
             </h2>
             <p>
               Extrae metadatos de tus archivos automáticamente o de forma manual
+            </p>
+            <p className="mt-2 text-lg">
+              Archivos procesados: {processedCount} de {files.length}
+            </p>
+            <p className="text-sm text-gray-600 mt-1">
+              Nota: Para el método manual, debes agregar al menos un campo de
+              metadatos para que se considere como procesado
             </p>
           </div>
 
@@ -415,6 +502,7 @@ export default function ProcessFiles() {
                   llmModelOptions={llmModelOptions}
                   getProcessingOptions={getProcessingOptions}
                   updateMetadata={updateCurrentFileMetadata}
+                  onProcessingMethodChange={handleProcessingMethodChange}
                 />
               </div>
               <div>
@@ -423,6 +511,7 @@ export default function ProcessFiles() {
                   updateMetadata={updateCurrentFileMetadata}
                   addTag={addTag}
                   removeTag={removeTag}
+                  onDeleteFile={() => handleDeleteFile(currentFileId)}
                 />
                 {currentFileId &&
                   fileMetadata[currentFileId]?.llmErrorResponse && (
@@ -445,14 +534,47 @@ export default function ProcessFiles() {
             </ButtonLink>
             <BrutalButton
               onClick={saveAllMetadata}
-              disabled={isProcessing || files.length === 0}
+              disabled={isProcessing || processedCount < files.length}
               variant="green"
             >
-              {isProcessing ? "Guardando..." : "Guardar metadatos"}
+              {isProcessing
+                ? "Guardando..."
+                : processedCount < files.length
+                ? `Faltan ${
+                    files.length - processedCount
+                  } archivos por procesar`
+                : "Guardar metadatos"}
             </BrutalButton>
           </div>
         </div>
       </div>
+
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg border-4 border-red-500">
+            <h3 className="text-xl font-bold mb-4">
+              ¿Estás seguro de que deseas eliminar este archivo?
+            </h3>
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => {
+                  setShowDeleteConfirm(false);
+                  setFileToDelete(null);
+                }}
+                className="px-4 py-2 border-4 border-gray-300 rounded-lg hover:bg-gray-100"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={confirmDeleteFile}
+                className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
+              >
+                Eliminar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
