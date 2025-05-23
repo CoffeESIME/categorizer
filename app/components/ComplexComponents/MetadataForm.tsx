@@ -1,8 +1,10 @@
+// app/components/ComplexComponents/MetadataForm.tsx
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { BrutalInput } from "../InputComponent/InputComponent";
-import BrutalButton from "../ButtonComponent/ButtonComponent";
+import { BrutalInput } from "../InputComponent/InputComponent"; //
+import BrutalButton from "../ButtonComponent/ButtonComponent"; //
+import BrutalDropDown from "../DropDownComponent/DropdownComponent"; //
 
 interface MetadataFormProps {
   metadata: any;
@@ -12,6 +14,17 @@ interface MetadataFormProps {
   onDeleteFile?: () => void;
   onEmbeddingTypeChange?: (type: string) => void;
 }
+
+const embeddingTypeOptions = [
+  { label: "Texto (por defecto)", value: "text" },
+  { label: "PDF", value: "pdf" },
+  { label: "Imagen (CLIP + Descripción)", value: "image_w_des" },
+  { label: "Imagen (CLIP + OCR)", value: "ocr_w_img" },
+  { label: "OCR (solo texto extraído)", value: "ocr" },
+  { label: "Audio", value: "audio" },
+  { label: "Video", value: "video" },
+  { label: "Grafo", value: "graph" },
+];
 
 export const MetadataForm: React.FC<MetadataFormProps> = ({
   metadata,
@@ -24,12 +37,30 @@ export const MetadataForm: React.FC<MetadataFormProps> = ({
   const { t } = useTranslation();
   const [showCombinedForm, setShowCombinedForm] = useState(false);
   const [showDeleteOption, setShowDeleteOption] = useState(false);
+  const [tagInputValue, setTagInputValue] = useState("");
 
   if (!metadata) return null;
 
+  const handleTagInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      if (tagInputValue.trim()) {
+        addTag(tagInputValue.trim());
+        setTagInputValue("");
+      }
+    }
+  };
+
+  const handleAddTagClick = () => {
+    if (tagInputValue.trim()) {
+      addTag(tagInputValue.trim());
+      setTagInputValue("");
+    }
+  };
+
   const renderTagSection = (
     tags: string[],
-    addHandler: (tag: string) => void,
+    addHandler: (tag: string) => void, // Corrected: expecting addTag (which expects string)
     removeHandler: (tag: string) => void
   ) => (
     <div>
@@ -38,28 +69,20 @@ export const MetadataForm: React.FC<MetadataFormProps> = ({
           type="text"
           id="tagInput"
           placeholder={t("metadataForm.placeholders.tags")}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              addHandler((e.target as HTMLInputElement).value);
-              (e.target as HTMLInputElement).value = "";
-            }
-          }}
+          value={tagInputValue}
+          onChange={(e) => setTagInputValue(e.target.value)}
+          onKeyDown={handleTagInputKeyDown}
           className="flex-1 p-2 border-4 border-black rounded-lg"
         />
         <BrutalButton
-          onClick={() => {
-            const input = document.getElementById(
-              "tagInput"
-            ) as HTMLInputElement;
-            addHandler(input.value);
-            input.value = "";
-          }}
+          onClick={handleAddTagClick} // Use the new handler
           variant="teal"
         >
           +
         </BrutalButton>
       </div>
       <div className="flex flex-wrap gap-2 mt-2">
+        {/* ... (map tags - unchanged) ... */}
         {tags?.map((tag: string) => (
           <span
             key={tag}
@@ -79,6 +102,22 @@ export const MetadataForm: React.FC<MetadataFormProps> = ({
   );
 
   const isImage = metadata?.file_type?.startsWith("image");
+
+  // Determine current embedding type from metadata, applying defaults if not set
+  // This default logic is now primarily handled by ProcessFiles,
+  // but we can still have a fallback here for direct display.
+  const currentEmbeddingType =
+    metadata?.embedding_type ||
+    (isImage
+      ? "image_w_des"
+      : metadata?.file_type === "application/pdf"
+      ? "pdf"
+      : "text");
+
+  const selectedEmbeddingTypeLabel =
+    embeddingTypeOptions.find((opt) => opt.value === currentEmbeddingType)
+      ?.label || t("processOptions.method");
+
   return (
     <div className="space-y-4">
       {isImage && (
@@ -126,40 +165,32 @@ export const MetadataForm: React.FC<MetadataFormProps> = ({
         </div>
       )}
 
-      {!showCombinedForm ? (
-        // Formulario original basado en el método de procesamiento
-        <>
-          <div className="mb-4 p-4 border-4 border-black rounded-lg bg-white">
-            <h3 className="text-xl font-bold mb-2">Tipo de Embedding</h3>
-            <p className="text-sm text-gray-600 mb-2">
-              Selecciona el tipo de embedding que se usará para este archivo
-            </p>
-            <select
-              value={
-                metadata.embedding_type ||
-                (metadata.file_type?.startsWith("application/pdf")
-                  ? "pdf"
-                  : "text")
-              }
-              onChange={(e) => onEmbeddingTypeChange?.(e.target.value)}
-              className="w-full p-2 border-4 border-black rounded-lg bg-white"
-            >
-              <option value="text">Texto (por defecto)</option>
-              <option value="pdf">PDF</option> {/* 🆕 */}
-              <option value="image_w_des">
-                Imagen (usando CLIP) y descripcion
-              </option>
-              <option value="ocr_w_img">Imagen (usando CLIP) y OCR</option>
-              <option value="ocr">OCR (texto extraído)</option>
-              <option value="audio">Audio</option>
-              <option value="video">Video</option>
-              <option value="graph">Grafo</option>
-            </select>
-          </div>
+      <div className="mb-4 p-4 border-4 border-black rounded-lg bg-white">
+        <h3 className="text-xl font-bold mb-2">Tipo de Embedding</h3>
+        <p className="text-sm text-gray-600 mb-2">
+          Selecciona el tipo de embedding que se usará para este archivo.
+        </p>
+        <BrutalDropDown
+          buttonLabel={selectedEmbeddingTypeLabel}
+          options={embeddingTypeOptions}
+          onSelect={(value) => {
+            if (onEmbeddingTypeChange) {
+              onEmbeddingTypeChange(value);
+            } else {
+              updateMetadata({ embedding_type: value });
+            }
+          }}
+          buttonWidthClass="w-full" // Make dropdown full width
+        />
+      </div>
 
+      {!showCombinedForm ? (
+        // ... (rest of the form, largely unchanged but uses currentEmbeddingType for context if needed)
+        <>
           {metadata.processingMethod === "ocr" ||
-          (metadata.file_type === "image" &&
+          (isImage && // Use isImage here
             metadata.processingMethod !== "image_description") ? (
+            // ... OCR Form Fields ...
             <div className="space-y-4 border-4 border-black rounded-lg p-4 bg-white">
               <h3 className="text-xl font-bold">
                 {t("metadataForm.ocrTitle")}
@@ -344,6 +375,7 @@ export const MetadataForm: React.FC<MetadataFormProps> = ({
               </div>
             </div>
           ) : metadata.processingMethod === "image_description" ? (
+            // ... Image Description Form Fields ...
             <div className="space-y-4 border-4 border-black rounded-lg p-4 bg-white">
               <h3 className="text-xl font-bold">
                 {t("metadataForm.imageTitle")}
@@ -432,7 +464,7 @@ export const MetadataForm: React.FC<MetadataFormProps> = ({
               </div>
             </div>
           ) : (
-            // Formulario para archivos que no son imágenes (videos, PDFs, etc.)
+            // ... General/Manual Form Fields ...
             <div className="space-y-4 border-4 border-black rounded-lg p-4 bg-white">
               <h3 className="text-xl font-bold">
                 {t("metadataForm.generalTitle")}
@@ -545,7 +577,7 @@ export const MetadataForm: React.FC<MetadataFormProps> = ({
           )}
         </>
       ) : (
-        // Formulario combinado para imágenes
+        // ... Combined Form for Images (unchanged from your code) ...
         <div className="space-y-4">
           <div className="border-4 border-black rounded-lg p-4 bg-white">
             <h3 className="text-xl font-bold mb-4">
