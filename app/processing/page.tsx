@@ -42,6 +42,13 @@ export type FileMetadata = {
   color_palette?: string[];
   composition?: string;
   file_type?: string;
+  embedding_type?:
+    | "image_w_des"
+    | "ocr_w_img"
+    | "text"
+    | "audio"
+    | "video"
+    | "graph";
 };
 
 interface AutoFields {
@@ -138,10 +145,37 @@ export default function ProcessFiles() {
   };
   useEffect(() => {
     if (currentFileId !== null) {
+      const currentFile = files.find(
+        (file) => file.original_name === currentFileId
+      );
+      const fileType = getMainFileType(currentFile);
+
+      // Asignar embedding_type basado en el tipo de archivo
+      let suggestedEmbeddingType:
+        | "image"
+        | "ocr"
+        | "text"
+        | "audio"
+        | "video"
+        | "graph" = "text";
+
+      switch (fileType) {
+        case "image":
+          suggestedEmbeddingType = "image";
+          break;
+        case "audio":
+          suggestedEmbeddingType = "audio";
+          break;
+        case "video":
+          suggestedEmbeddingType = "video";
+          break;
+        default:
+          suggestedEmbeddingType = "text";
+      }
+
       updateCurrentFileMetadata({
-        file_type: getMainFileType(
-          files.find((file) => file.original_name === currentFileId)
-        ),
+        file_type: fileType,
+        embedding_type: suggestedEmbeddingType,
       });
     }
   }, [currentFileId]);
@@ -434,6 +468,19 @@ export default function ProcessFiles() {
     setShowDeleteConfirm(true);
   };
 
+  const handleEmbeddingTypeChange = (type: string) => {
+    if (!currentFileId) return;
+    updateCurrentFileMetadata({
+      embedding_type: type as
+        | "image"
+        | "ocr"
+        | "text"
+        | "audio"
+        | "video"
+        | "graph",
+    });
+  };
+
   const confirmDeleteFile = () => {
     if (fileToDelete) {
       setFileMetadata((prev) => {
@@ -512,6 +559,7 @@ export default function ProcessFiles() {
                   addTag={addTag}
                   removeTag={removeTag}
                   onDeleteFile={() => handleDeleteFile(currentFileId)}
+                  onEmbeddingTypeChange={handleEmbeddingTypeChange}
                 />
                 {currentFileId &&
                   fileMetadata[currentFileId]?.llmErrorResponse && (

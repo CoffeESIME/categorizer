@@ -1,218 +1,250 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
-import { useDropzone } from "react-dropzone"; // Si lo requieres en algún otro flujo
+import React, { useState, useRef, useEffect, FormEvent } from "react";
 import { TitleComponent } from "../components/TitleComponent/TtitleComponent";
 import BrutalButton from "../components/ButtonComponent/ButtonComponent";
 import { BrutalInput } from "../components/InputComponent/InputComponent";
-import BrutalDropDown from "../components/DropDownComponent/DropdownComponent";
 import BrutalCheckbox from "../components/CheckBoxComponent/CheckBoxComponent";
 import { ButtonLink } from "../components/ButtonLink/ButtonLink";
+import categorizerAPI from "../utils/categorizerAPI";
 
-interface ChatMessage {
-  role: "user" | "assistant" | "system";
-  content: string;
+/* ──────────────── Tipos ──────────────── */
+interface Hit {
+  id: string;
+  distance: number;
+  file_location?: string;
+  text_chunk?: string;
+  original_doc_id?: string;
+  page_number?: number;
+  chunk_sequence?: number;
+  [k: string]: any;
+}
+interface SearchResponse {
+  text_results?: Hit[];
+  pdf_results?: Hit[];
+  image_clip?: Hit[];
+  image_ocr?: Hit[];
+  image_description?: Hit[];
+  query_used: string;
 }
 
-export default function RagBrutalistChat() {
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      role: "system",
-      content: "¡Bienvenido! Configura tus opciones y haz una pregunta.",
-    },
-  ]);
-  const [userInput, setUserInput] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [model, setModel] = useState("gpt-3.5");
-  const [temperature, setTemperature] = useState(0.7);
-  const [retrievalMethod, setRetrievalMethod] = useState("vector");
-  const [tools, setTools] = useState<string[]>([]);
-  const [topK, setTopK] = useState(3);
-  const [chunkSize, setChunkSize] = useState(512);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+/* ──────────────── Componente ──────────────── */
+export default function RagBrutalistSearch() {
+  const [query, setQuery] = useState("");
+  const [file, setFile] = useState<File | null>(null);
+
+  /* flags & k */
+  const [flags, setFlags] = useState({
+    search_text: true,
+    search_pdf: false,
+    search_image: true,
+    use_clip: true,
+    use_ocr: false,
+    use_description: false,
+  });
+  const [ks, setKs] = useState({ k_text: 5, k_pdf: 20, k_image: 10 });
+
+  /* UI state */
+  const [data, setData] = useState<SearchResponse | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState("");
+  const [openChunk, setOpenChunk] = useState<null | {
+    text: string;
+    meta: Hit;
+  }>(null);
+
+  const resultRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
-  const handleSend = async () => {
-    if (!userInput.trim()) return;
-    setIsLoading(true);
-    const newUserMessage: ChatMessage = { role: "user", content: userInput };
-    const updatedMessages = [...messages, newUserMessage];
-    setMessages(updatedMessages);
+    resultRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [data]);
+
+  /* helpers */
+  const toggle = (k: keyof typeof flags) =>
+    setFlags((p) => ({ ...p, [k]: !p[k] }));
+  const updateK = (dom: "text" | "pdf" | "image", val: number) =>
+    setKs((p) => ({ ...p, [`k_${dom}`]: val }));
+
+  /* submit */
+  const onSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    setErr("");
+    setLoading(true);
     try {
-      const response = await fetch("/api/ragChat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          messages: updatedMessages,
-          config: {
-            model,
-            temperature,
-            retrievalMethod,
-            tools,
-            topK,
-            chunkSize,
-          },
-        }),
-      });
-      if (!response.ok) throw new Error("Error en la llamada a /api/ragChat");
-      const data = await response.json();
-      const assistantMessage: ChatMessage = {
-        role: "assistant",
-        content: data.assistantMessage || "Sin respuesta.",
-      };
-      setMessages((prev) => [...prev, assistantMessage]);
-    } catch (error) {
-      console.error("Error en el chat:", error);
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "assistant",
-          content: "Ocurrió un error al procesar tu mensaje.",
-        },
-      ]);
+      const payload = { query, ...flags, ...ks, file };
+      const res = await categorizerAPI.multimodalSearch(payload);
+      setData(res);
+    } catch (e: any) {
+      setErr(e.message ?? "Error");
+      setData(null);
     } finally {
-      setIsLoading(false);
-      setUserInput("");
+      setLoading(false);
     }
   };
-  const toggleTool = (toolName: string) => {
-    setTools((prev) =>
-      prev.includes(toolName)
-        ? prev.filter((t) => t !== toolName)
-        : [...prev, toolName]
-    );
-  };
 
+  /* render hits */
+  const renderHits = (title: string, hits?: Hit[]) =>
+    hits && hits.length ? (
+      <div className="mb-8">
+        <h2 className="font-bold text-xl mb-2">{title}</h2>
+        <div className="grid gap-2">
+          {hits.map((h) => {
+            /* PDF: botón que abre modal, demás: enlace */
+            const isPdf = h.text_chunk !== undefined;
+            const fileName =
+              h.file_location?.split("/").pop() ??
+              h.original_doc_id ??
+              "sin_nombre";
+
+            return isPdf ? (
+              <button
+                key={h.id}
+                onClick={() => setOpenChunk({ text: h.text_chunk!, meta: h })}
+                className="text-left border-4 border-black bg-white p-2 hover:bg-yellow-100 text-sm break-all"
+              >
+                <b>Pág.</b> {h.page_number} | <b>Dist.</b>{" "}
+                {h.distance.toFixed(3)} | <b>File:</b> {fileName}
+              </button>
+            ) : (
+              <a
+                key={h.id}
+                href={
+                  h.file_location
+                    ? `http://127.0.0.1:8000/uploads/${h.file_location}`
+                    : "#"
+                }
+                target="_blank"
+                className="border-4 border-black bg-white p-2 hover:bg-yellow-100 text-sm break-all"
+              >
+                <b>ID:</b> {h.id.slice(0, 8)}… | <b>Dist.</b>{" "}
+                {h.distance.toFixed(3)} | <b>File:</b> {fileName}
+              </a>
+            );
+          })}
+        </div>
+      </div>
+    ) : null;
+
+  /* ──────────────── JSX ──────────────── */
   return (
     <div className="flex flex-col h-screen border-4 border-black bg-white text-black font-sans">
-      <div className="p-4 border-b-4 border-black bg-white -rotate-1 transform origin-top-left">
+      {/* header */}
+      <div className="p-4 border-b-4 border-black bg-white -rotate-1">
         <div className="flex justify-between items-center">
-          <TitleComponent title="Chat RAG Data" variant="neobrutalism" />
+          <TitleComponent
+            variant="neobrutalism"
+            title="RAG Multimodal Search"
+          />
           <ButtonLink href="/" variant="outline" size="lg">
             <p className="text-xl">Home</p>
           </ButtonLink>
         </div>
+      </div>
 
-        <div className="flex flex-wrap gap-4 mt-4">
-          <div className="flex flex-col border-4 border-black p-2 bg-pink-300 rounded-lg">
-            <label className="font-bold mb-1">Modelo:</label>
-            <BrutalDropDown
-              buttonLabel={model}
-              options={[
-                { label: "GPT-3.5", value: "gpt-3.5" },
-                { label: "GPT-4", value: "gpt-4" },
-                { label: "LLaMA2", value: "llama2" },
-              ]}
-              onSelect={(value) => setModel(value)}
-              buttonBgClass="bg-pink-300"
-              dropdownBgClass="bg-white"
-            />
-          </div>
-          <div className="flex flex-col border-4 border-black p-2 bg-yellow-300 rounded-lg">
-            <label className="font-bold mb-1">Temperatura:</label>
-            <BrutalInput
-              type="number"
-              step="0.1"
-              min="0"
-              max="1"
-              value={temperature.toString()}
-              onChange={(e) => setTemperature(Number(e.target.value))}
-              className="w-20 bg-white"
-            />
-          </div>
-          <div className="flex flex-col border-4 border-black p-2 bg-green-300 rounded-lg">
-            <label className="font-bold mb-1">Retrieval:</label>
-            <BrutalDropDown
-              buttonLabel={retrievalMethod}
-              options={[
-                { label: "Vector DB", value: "vector" },
-                { label: "Graph DB", value: "graph" },
-                { label: "Híbrido", value: "hybrid" },
-              ]}
-              onSelect={(value) => setRetrievalMethod(value)}
-              buttonBgClass="bg-green-300"
-              dropdownBgClass="bg-white"
-            />
-          </div>
-          <div className="flex flex-col border-4 border-black p-2 bg-blue-300 rounded-lg">
-            <label className="font-bold mb-1">Herramientas:</label>
-            <div className="space-y-1">
-              <BrutalCheckbox
-                label="Calculadora"
-                checked={tools.includes("calculator")}
-                onChange={() => toggleTool("calculator")}
-              />
-              <BrutalCheckbox
-                label="Wikipedia"
-                checked={tools.includes("wikipedia")}
-                onChange={() => toggleTool("wikipedia")}
-              />
-            </div>
-          </div>
-          <div className="flex flex-col border-4 border-black p-2 bg-orange-300 rounded-lg">
-            <label className="font-bold mb-1">Top K:</label>
-            <BrutalInput
-              type="number"
-              min="1"
-              value={topK.toString()}
-              onChange={(e) => setTopK(Number(e.target.value))}
-              className="w-16 bg-white"
-            />
-          </div>
-          <div className="flex flex-col border-4 border-black p-2 bg-purple-300 rounded-lg">
-            <label className="font-bold mb-1">Chunk Size:</label>
-            <BrutalInput
-              type="number"
-              min="128"
-              value={chunkSize.toString()}
-              onChange={(e) => setChunkSize(Number(e.target.value))}
-              className="w-20 bg-white"
-            />
-          </div>
-        </div>
-      </div>
-      <div className="flex-1 p-4 overflow-auto border-b-4 border-black bg-gray-100 relative">
-        {messages.map((msg, idx) => (
-          <div
-            key={idx}
-            className={`p-3 mb-4 max-w-2xl border-4 border-black rounded-lg ${
-              msg.role === "system"
-                ? "bg-gray-300 self-center mx-auto"
-                : msg.role === "assistant"
-                ? "bg-green-200 self-start"
-                : "bg-blue-200 self-end"
-            }`}
-          >
-            <b className="uppercase">{msg.role}:</b> {msg.content}
-          </div>
-        ))}
-        <div ref={messagesEndRef} />
-      </div>
-      <div className="p-4 bg-white -rotate-1 transform origin-bottom-left border-4 border-black">
-        <div className="flex space-x-3">
+      {/* form */}
+      <form
+        onSubmit={onSubmit}
+        className="p-4 border-b-4 border-black bg-gray-50 flex flex-col gap-4 overflow-y-auto"
+      >
+        {/* query */}
+        <div className="flex gap-4 flex-wrap">
           <BrutalInput
             type="text"
-            placeholder="Escribe tu pregunta..."
-            className="flex-1 p-4 border-4 border-black rounded-lg text-xl bg-white placeholder-black"
-            value={userInput}
-            onChange={(e) => setUserInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !isLoading) {
-                handleSend();
-              }
-            }}
+            placeholder="¿Qué buscas?"
+            className="flex-1 min-w-[260px] border-4 border-black p-3 text-lg bg-white"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
           />
-          <BrutalButton
-            onClick={handleSend}
-            disabled={isLoading}
-            variant="red"
-            className="px-6 py-4 rounded-lg text-xl border-4 border-black transition-transform hover:rotate-1 disabled:bg-gray-300 disabled:cursor-not-allowed"
-          >
-            {isLoading ? "Enviando..." : "Enviar"}
-          </BrutalButton>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={(e) => setFile(e.target.files?.[0] || null)}
+            className="border-2 border-black p-1"
+          />
         </div>
+
+        {/* checkboxes */}
+        <div className="flex gap-4 flex-wrap">
+          {["search_text", "search_pdf", "search_image"].map((k) => (
+            <BrutalCheckbox
+              key={k}
+              label={k}
+              checked={flags[k as keyof typeof flags]}
+              onChange={() => toggle(k as keyof typeof flags)}
+            />
+          ))}
+          {flags.search_image &&
+            ["use_clip", "use_ocr", "use_description"].map((k) => (
+              <BrutalCheckbox
+                key={k}
+                label={k.replace("use_", "")}
+                checked={flags[k as keyof typeof flags]}
+                onChange={() => toggle(k as keyof typeof flags)}
+              />
+            ))}
+        </div>
+
+        {/* k values */}
+        <div className="flex gap-4 flex-wrap">
+          {(["text", "pdf", "image"] as const).map((dom) => (
+            <div
+              key={dom}
+              className="flex items-center gap-2 border-4 border-black p-2 bg-yellow-200 rounded"
+            >
+              <label>k_{dom}</label>
+              <BrutalInput
+                type="number"
+                min="1"
+                value={ks[`k_${dom}`].toString()}
+                onChange={(e) => updateK(dom, Number(e.target.value))}
+                className="w-16 bg-white"
+              />
+            </div>
+          ))}
+        </div>
+
+        <BrutalButton
+          variant="red"
+          disabled={loading || !query.trim()}
+          className="px-6 py-3 text-xl border-4 border-black w-fit"
+        >
+          {loading ? "Buscando…" : "Buscar"}
+        </BrutalButton>
+        {err && <p className="text-red-600 font-bold">{err}</p>}
+      </form>
+
+      {/* results */}
+      <div className="flex-1 overflow-y-auto p-4 bg-gray-100" ref={resultRef}>
+        {data ? (
+          <>
+            {renderHits("Textos", data.text_results)}
+            {renderHits("PDF Chunks", data.pdf_results)}
+            {renderHits("Imágenes CLIP", data.image_clip)}
+            {renderHits("Imágenes OCR", data.image_ocr)}
+            {renderHits("Imágenes Descripción", data.image_description)}
+            {!Object.keys(data).some(
+              (k) => k.endsWith("_results") || k.startsWith("image_")
+            ) && <p>No se encontraron coincidencias.</p>}
+          </>
+        ) : (
+          <p className="text-gray-600">Resultados aparecerán aquí…</p>
+        )}
       </div>
+
+      {/* modal chunk */}
+      {openChunk && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+          <div className="bg-white border-4 border-black p-6 max-w-3xl max-h-[80vh] overflow-y-auto space-y-4 rounded-lg">
+            <h3 className="font-bold">
+              {openChunk.meta.original_doc_id} — pág.{" "}
+              {openChunk.meta.page_number}
+            </h3>
+            <pre className="whitespace-pre-wrap text-sm">{openChunk.text}</pre>
+            <BrutalButton variant="red" onClick={() => setOpenChunk(null)}>
+              Cerrar
+            </BrutalButton>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

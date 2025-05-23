@@ -11,6 +11,7 @@ export interface BrutalInputProps
   borderClass?: string;
   shadowClass?: string;
   focusBgClass?: string;
+  label?: string;
 }
 
 const BrutalInput = React.forwardRef<
@@ -27,6 +28,7 @@ const BrutalInput = React.forwardRef<
       borderClass = "border-black",
       shadowClass = "shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]",
       focusBgClass = "focus:bg-gray-200",
+      label,
       ...props
     },
     ref
@@ -53,12 +55,19 @@ const BrutalInput = React.forwardRef<
     }
 
     return (
-      <input
-        type={type}
-        ref={ref as React.Ref<HTMLInputElement>}
-        className={cn("h-12", commonClasses)}
-        {...props}
-      />
+      <div className="flex flex-col">
+        {label && (
+          <label htmlFor={props.id} className="mb-1 font-bold">
+            {label}
+          </label>
+        )}
+        <input
+          type={type}
+          ref={ref as React.Ref<HTMLInputElement>}
+          className={cn("h-12", commonClasses)}
+          {...props}
+        />
+      </div>
     );
   }
 );

@@ -10,6 +10,7 @@ interface MetadataFormProps {
   addTag: (tag: string) => void;
   removeTag: (tag: string) => void;
   onDeleteFile?: () => void;
+  onEmbeddingTypeChange?: (type: string) => void;
 }
 
 export const MetadataForm: React.FC<MetadataFormProps> = ({
@@ -18,6 +19,7 @@ export const MetadataForm: React.FC<MetadataFormProps> = ({
   addTag,
   removeTag,
   onDeleteFile,
+  onEmbeddingTypeChange,
 }) => {
   const { t } = useTranslation();
   const [showCombinedForm, setShowCombinedForm] = useState(false);
@@ -127,6 +129,34 @@ export const MetadataForm: React.FC<MetadataFormProps> = ({
       {!showCombinedForm ? (
         // Formulario original basado en el método de procesamiento
         <>
+          <div className="mb-4 p-4 border-4 border-black rounded-lg bg-white">
+            <h3 className="text-xl font-bold mb-2">Tipo de Embedding</h3>
+            <p className="text-sm text-gray-600 mb-2">
+              Selecciona el tipo de embedding que se usará para este archivo
+            </p>
+            <select
+              value={
+                metadata.embedding_type ||
+                (metadata.file_type?.startsWith("application/pdf")
+                  ? "pdf"
+                  : "text")
+              }
+              onChange={(e) => onEmbeddingTypeChange?.(e.target.value)}
+              className="w-full p-2 border-4 border-black rounded-lg bg-white"
+            >
+              <option value="text">Texto (por defecto)</option>
+              <option value="pdf">PDF</option> {/* 🆕 */}
+              <option value="image_w_des">
+                Imagen (usando CLIP) y descripcion
+              </option>
+              <option value="ocr_w_img">Imagen (usando CLIP) y OCR</option>
+              <option value="ocr">OCR (texto extraído)</option>
+              <option value="audio">Audio</option>
+              <option value="video">Video</option>
+              <option value="graph">Grafo</option>
+            </select>
+          </div>
+
           {metadata.processingMethod === "ocr" ||
           (metadata.file_type === "image" &&
             metadata.processingMethod !== "image_description") ? (

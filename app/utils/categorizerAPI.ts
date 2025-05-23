@@ -448,6 +448,47 @@ class CategorizerAPI {
       throw error;
     }
   }
+
+  async advancedGraphSearch(payload: any): Promise<any> {
+    try {
+      const response = await axios.post(
+        `${this.baseUrl}/graph/search/`,
+        payload,
+        {
+          headers: this.headers,
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Error in advancedGraphSearch:", error);
+      if (axios.isAxiosError(error) && error.response) {
+        throw new Error(error.response.data.detail || error.message);
+      }
+      throw error;
+    }
+  }
+
+  async multimodalSearch(payload: Record<string, any>): Promise<any> {
+    const form = new FormData();
+    Object.entries(payload).forEach(([k, v]) => {
+      if (v === undefined || v === null) return;
+      if (k === "file" && v instanceof File) form.append("file", v);
+      else form.append(k, String(v));
+    });
+
+    try {
+      const { data } = await axios.post(`${this.baseUrl}/search`, form, {
+        headers: {
+          ...this.headers,
+          "Content-Type": "multipart/form-data",
+        },
+      });
+      return data;
+    } catch (error) {
+      console.error("Error in multimodalSearch:", error);
+      throw error;
+    }
+  }
 }
 
 const categorizerAPI = new CategorizerAPI();

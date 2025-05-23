@@ -44,6 +44,11 @@ export default function Home() {
           label="Visualization"
           color="bg-blue-400"
         />
+        <CategoryButton
+          href="/ask-something"
+          color="bg-blue-400"
+          label="chat RAG"
+        />
       </div>
       <Marquee className="mb-8 mt-12" speed="slow">
         <div className="flex items-center gap-4 px-4">

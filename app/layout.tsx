@@ -30,9 +30,9 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-white`}
       >
         <I18nProvider>
-          <div className="absolute bottom-4 right-4 z-50">
+          {/* <div className="absolute bottom-4 right-4 z-50">
             <LanguageSelector />
-          </div>
+          </div> */}
           <div id="modal-root"></div>
           {children}
         </I18nProvider>
