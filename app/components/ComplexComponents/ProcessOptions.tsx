@@ -1,13 +1,15 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import CustomCheckbox from "../CheckBoxComponent/CheckBoxComponent";
-import { BrutalInput } from "../InputComponent/InputComponent";
-import BrutalButton from "../ButtonComponent/ButtonComponent";
-import BrutalDropDown from "../DropDownComponent/DropdownComponent";
-import { ProcessingMethod } from "../../utils/categorizerAPI";
+import CustomCheckbox from "../CheckBoxComponent/CheckBoxComponent"; //
+import BrutalButton from "../ButtonComponent/ButtonComponent"; //
+import BrutalDropDown from "../DropDownComponent/DropdownComponent"; //
+import { ProcessingMethod, TaskType } from "../../utils/categorizerAPI"; //
+import { useTranslation } from "react-i18next";
+import { Model as ConfigModel } from "../../store/configStore"; // For typing llmModelOptions
 
 interface AutoFields {
+  //
   [key: string]: boolean;
   author: boolean;
   title: boolean;
@@ -25,17 +27,17 @@ interface ProcessOptionsProps {
   currentFile: any;
   isProcessing: boolean;
   processWithOCR: () => void;
-  processWithLLM: () => void;
+  processWithLLM: (taskType?: TaskType) => void;
   autoFields: AutoFields;
   toggleAutoField: (field: string) => void;
   llmConfig: {
     model: string;
     temperature: number;
   };
-  setLlmConfig: (config: any) => void;
-  llmModelOptions: { label: string; value: string }[];
-  getProcessingOptions: (file: any) => string[];
-  updateMetadata: (updates: any) => void;
+  setLlmConfig: (config: { model: string; temperature: number }) => void;
+  llmModelOptions: (ConfigModel & { groupName?: string })[]; // Expect groupName for filtering
+  getProcessingOptions: (file: any) => ProcessingMethod[];
+  activeProcessingMethod: ProcessingMethod;
   onProcessingMethodChange: (method: ProcessingMethod) => void;
 }
 
@@ -50,87 +52,34 @@ export const ProcessOptions: React.FC<ProcessOptionsProps> = ({
   setLlmConfig,
   llmModelOptions,
   getProcessingOptions,
-  updateMetadata,
+  activeProcessingMethod,
   onProcessingMethodChange,
 }) => {
-  if (!currentFile) return null;
-  const availableProcessingOptions = getProcessingOptions(currentFile);
-  const [selectedProcessingOption, setSelectedProcessingOption] =
-    useState<string>("");
+  const { t } = useTranslation();
   const [renderFields, setRenderFields] = useState<string[]>([]);
-  const [selectedMethod, setSelectedMethod] =
-    useState<ProcessingMethod>("manual");
+
+  const availableMethodsForFile = currentFile
+    ? getProcessingOptions(currentFile)
+    : [];
 
   useEffect(() => {
-    if (availableProcessingOptions.length > 0) {
-      setSelectedProcessingOption(availableProcessingOptions[0]);
-    }
-  }, [currentFile]);
-
-  const processingOptionsForDropdown = availableProcessingOptions.map(
-    (option) => {
-      let label = "";
-      switch (option) {
-        case "ocr":
-          label = "OCR";
-          break;
-        case "image_description":
-          label = "Análisis de Imagen";
-          break;
-        case "llm":
-          label = "Analizar con LLM";
-          break;
-        default:
-          label = option;
-      }
-      return { label, value: option };
-    }
-  );
-
-  const getModelOptions = () => {
-    if (selectedProcessingOption === "image_description") {
-      return llmModelOptions.filter(
-        (model) =>
-          model.label.toLowerCase().includes("vision") ||
-          model.label.toLowerCase().includes("llava") ||
-          model.label.toLowerCase().includes("gemm")
-      );
-    } else if (selectedProcessingOption === "ocr") {
-      return llmModelOptions.filter(
-        (model) =>
-          model.label.toLowerCase().includes("deep") ||
-          model.label.toLowerCase().includes("lla") ||
-          model.label.toLowerCase().includes("gemm") ||
-          model.label.toLowerCase().includes("qwq")
-      );
-    }
-    return llmModelOptions;
-  };
-
-  const fieldLabels: Record<string, string> = {
-    author: "Autor",
-    title: "Título",
-    content: "Contenido",
-    tags: "Tags",
-    sentiment: "Sentimiento",
-    description: "Descripción",
-    topics: "Temas",
-    style: "Estilo",
-    color_palette: "Paleta de Colores",
-    composition: "Composición",
-  };
-
-  const handleSelect = (value: string) => {
-    setSelectedProcessingOption(value);
-    updateMetadata({ processingMethod: value });
-  };
-
-  const currentModelOptions = getModelOptions();
-
-  useEffect(() => {
-    switch (selectedProcessingOption) {
+    switch (activeProcessingMethod) {
       case "ocr":
-        setRenderFields(["author", "title", "content", "tags", "sentiment"]);
+        setRenderFields([
+          "author",
+          "title",
+          "content",
+          "tags",
+          "sentiment",
+          "work",
+          "languages",
+          "analysis",
+          "categories",
+          "keywords",
+          "content_type",
+          "multilingual",
+          "extractedText",
+        ]);
         break;
       case "image_description":
         setRenderFields([
@@ -142,69 +91,136 @@ export const ProcessOptions: React.FC<ProcessOptionsProps> = ({
           "composition",
         ]);
         break;
+      case "llm":
+        setRenderFields([
+          "author",
+          "title",
+          "content",
+          "tags",
+          "sentiment",
+          "work",
+          "languages",
+          "analysis",
+          "categories",
+          "keywords",
+          "content_type",
+          "multilingual",
+        ]);
+        break;
       default:
-        setRenderFields(["author", "title", "content", "tags", "sentiment"]);
+        setRenderFields([]);
         break;
     }
-  }, [selectedProcessingOption]);
+  }, [activeProcessingMethod]);
+
+  const getFilteredModelOptions = React.useCallback(() => {
+    if (activeProcessingMethod === "image_description") {
+      return llmModelOptions.filter(
+        (model) => model.groupName === "Vision Models"
+      );
+    } else if (
+      activeProcessingMethod === "ocr" ||
+      activeProcessingMethod === "llm"
+    ) {
+      return llmModelOptions.filter(
+        (model) =>
+          model.groupName === "Text Generation Models" ||
+          model.groupName === "General Purpose/Text Processing" ||
+          model.groupName === "Text Analysis/Security"
+      );
+    }
+    // Default or fallback if no specific method matches complex filtering needs
+    return llmModelOptions.filter(
+      (model) =>
+        model.groupName === "Text Generation Models" ||
+        model.groupName === "General Purpose/Text Processing"
+    );
+  }, [activeProcessingMethod, llmModelOptions]);
+
+  const currentFilteredModels = getFilteredModelOptions();
 
   useEffect(() => {
-    const options = getModelOptions();
-    if (
-      options.length > 0 &&
-      !options.some((option) => option.value === llmConfig.model)
-    ) {
-      setLlmConfig({ ...llmConfig, model: options[0].value });
+    const filteredModels = getFilteredModelOptions();
+    if (filteredModels.length > 0) {
+      const isCurrentModelValid = filteredModels.some(
+        (option) => option.value === llmConfig.model
+      );
+      if (!isCurrentModelValid) {
+        setLlmConfig({ ...llmConfig, model: filteredModels[0].value });
+      }
+    } else if (llmConfig.model && activeProcessingMethod !== "manual") {
+      // If no models are valid for the current auto-processing type,
+      // it might be good to clear the model or set a placeholder,
+      // or inform the user. For now, we'll ensure it doesn't crash.
+      // setLlmConfig({ ...llmConfig, model: "" }); // Or a specific placeholder/error state
     }
-  }, [selectedProcessingOption]);
+  }, [
+    activeProcessingMethod,
+    currentFile,
+    llmConfig,
+    setLlmConfig,
+    getFilteredModelOptions,
+  ]);
 
-  const handleMethodChange = (method: ProcessingMethod) => {
-    setSelectedMethod(method);
-    onProcessingMethodChange(method);
-  };
+  if (!currentFile) return null;
+
+  const methodButtonClass = (method: ProcessingMethod) =>
+    `px-4 py-2 border-4 rounded-lg ${
+      activeProcessingMethod === method
+        ? "border-blue-500 bg-blue-100"
+        : "border-gray-300 hover:bg-gray-100"
+    }`;
 
   return (
     <div className="space-y-4 border-4 border-black rounded-lg p-4 bg-white">
-      <h3 className="text-xl font-bold">Opciones de Procesamiento</h3>
+      <h3 className="text-xl font-bold">{t("processOptions.title")}</h3>
       <div className="space-y-2">
-        <label className="font-bold">Método de Procesamiento:</label>
+        <label className="font-bold">{t("processOptions.method")}:</label>
         <div className="flex flex-wrap gap-2">
-          {getProcessingOptions(currentFile).map((option) => (
+          {availableMethodsForFile.map((option) => (
             <button
               key={option}
-              onClick={() => handleMethodChange(option as ProcessingMethod)}
-              className={`px-4 py-2 border-4 rounded-lg ${
-                selectedMethod === option
-                  ? "border-blue-500 bg-blue-100"
-                  : "border-gray-300 hover:bg-gray-100"
-              }`}
+              onClick={() =>
+                onProcessingMethodChange(option as ProcessingMethod)
+              }
+              className={methodButtonClass(option as ProcessingMethod)}
             >
               {option === "ocr"
-                ? "OCR"
+                ? t("processOptions.ocr")
                 : option === "image_description"
-                ? "Descripción de Imagen"
+                ? t("processOptions.imageDescription")
                 : option === "llm"
-                ? "LLM"
-                : "Manual"}
+                ? t("processOptions.llm")
+                : t("processOptions.manual")}
             </button>
           ))}
         </div>
       </div>
 
-      {selectedMethod !== "manual" && (
+      {activeProcessingMethod !== "manual" && (
         <>
           <div className="space-y-2">
-            <label className="font-bold">Modelo LLM:</label>
+            <label className="font-bold">{t("processOptions.model")}:</label>
             <BrutalDropDown
-              options={llmModelOptions}
-              buttonLabel={llmConfig.model}
+              options={currentFilteredModels.map((m) => ({
+                label: m.label,
+                value: m.value,
+              }))}
+              buttonLabel={
+                currentFilteredModels.find((m) => m.value === llmConfig.model)
+                  ?.label ||
+                llmConfig.model ||
+                t("processOptions.model")
+              }
               onSelect={(value: string) =>
                 setLlmConfig({ ...llmConfig, model: value })
               }
             />
           </div>
           <div className="space-y-2">
-            <label className="font-bold">Temperatura:</label>
+            <label className="font-bold">
+              {t("processOptions.temperature")}:
+            </label>
             <div className="flex items-center gap-2">
               <input
                 type="range"
@@ -225,37 +241,47 @@ export const ProcessOptions: React.FC<ProcessOptionsProps> = ({
               </span>
             </div>
           </div>
-          <div className="space-y-2">
-            <label className="font-bold">Campos Automáticos:</label>
-            <div className="grid grid-cols-2 gap-2">
-              {Object.entries(autoFields).map(([field, value]) => (
-                <CustomCheckbox
-                  key={field}
-                  label={field}
-                  checked={value}
-                  onChange={() => toggleAutoField(field)}
-                />
-              ))}
+          {renderFields.length > 0 && (
+            <div className="space-y-2">
+              <label className="font-bold">
+                {t("processOptions.autoFields")}:
+              </label>
+              <div className="grid grid-cols-2 gap-2">
+                {renderFields.map((field) => (
+                  <CustomCheckbox
+                    key={field}
+                    label={t(`metadataForm.fields.${field}`, field)}
+                    checked={autoFields[field]}
+                    onChange={() => toggleAutoField(field)}
+                  />
+                ))}
+              </div>
             </div>
-          </div>
+          )}
           <div className="flex gap-2">
-            {selectedMethod === "ocr" && (
+            {activeProcessingMethod === "ocr" && (
               <BrutalButton
                 onClick={processWithOCR}
                 disabled={isProcessing}
                 variant="blue"
               >
-                {isProcessing ? "Procesando..." : "Procesar con OCR"}
+                {isProcessing
+                  ? t("general.loading")
+                  : t("processOptions.processWithOCR")}
               </BrutalButton>
             )}
-            {(selectedMethod === "llm" ||
-              selectedMethod === "image_description") && (
+            {(activeProcessingMethod === "llm" ||
+              activeProcessingMethod === "image_description") && (
               <BrutalButton
-                onClick={processWithLLM}
+                onClick={() =>
+                  processWithLLM(activeProcessingMethod as TaskType)
+                }
                 disabled={isProcessing}
                 variant="blue"
               >
-                {isProcessing ? "Procesando..." : "Procesar con LLM"}
+                {isProcessing
+                  ? t("general.loading")
+                  : t("processOptions.processWithLLM")}
               </BrutalButton>
             )}
           </div>

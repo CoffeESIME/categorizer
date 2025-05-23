@@ -1,8 +1,10 @@
 import { create } from "zustand";
 
-interface Model {
+export interface Model {
+  // Asegúrate que Model esté exportado
   label: string;
   value: string;
+  groupName?: string; // Añade groupName aquí si lo vas a usar así
 }
 
 interface ModelGroup {
