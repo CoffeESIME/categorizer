@@ -185,12 +185,10 @@ export const MetadataForm: React.FC<MetadataFormProps> = ({
       </div>
 
       {!showCombinedForm ? (
-        // ... (rest of the form, largely unchanged but uses currentEmbeddingType for context if needed)
         <>
           {metadata.processingMethod === "ocr" ||
           (isImage && // Use isImage here
             metadata.processingMethod !== "image_description") ? (
-            // ... OCR Form Fields ...
             <div className="space-y-4 border-4 border-black rounded-lg p-4 bg-white">
               <h3 className="text-xl font-bold">
                 {t("metadataForm.ocrTitle")}

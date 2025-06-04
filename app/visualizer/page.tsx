@@ -1,80 +1,145 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, {
+  useEffect,
+  useState,
+  useCallback,
+  useMemo,
+  ComponentType, // Import ComponentType
+} from "react";
+import {
+  Controls,
+  Background,
+  useNodesState,
+  useEdgesState,
+  addEdge,
+  Connection,
+  Edge,
+  Node, // This is React Flow's Node type: Node<TData>
+  MarkerType,
+  ReactFlowProvider,
+  ReactFlow,
+  NodeProps as RFNodeProps, // Use an alias for NodeProps from React Flow
+} from "@xyflow/react";
+
+import "@xyflow/react/dist/style.css";
+
 import BrutalButton from "../components/ButtonComponent/ButtonComponent";
 import { TitleComponent } from "../components/TitleComponent/TtitleComponent";
 import { ButtonLink } from "../components/ButtonLink/ButtonLink";
 import { NodeDetailsPanel } from "../components/Graph/NodeComponent";
 import categorizerAPI from "../utils/categorizerAPI";
 import { CreateNodeWithTypeForm } from "../components/Graph/NodeForm";
-import { FilterForm } from "../components/Graph/FilterForm";
 import { Modal } from "../components/Modal/Modal";
-import { useDocumentGraph } from "../lib/useDocumentGraph";
-import { useHeterogeneousGraph } from "../lib/useHeterogeneousGraph";
-import { CreateNodeData, DocumentNode } from "../types/nodeTypes";
-import { GraphEdge } from "../types/graphTypes";
+import { CreateNodeData, DocumentNode } from "../types/nodeTypes"; // Your data type
+import { GraphEdge as ApiGraphEdge } from "../types/graphTypes";
+import ReactFlowNode from "../components/Graph/ReactFlowNode";
+
 type GraphMode = "unconnected" | "full";
 
+const getNodeLabel = (nodeData: DocumentNode): string => {
+  if (nodeData.title) return nodeData.title;
+  if ("name" in nodeData && (nodeData as any).name)
+    return (nodeData as any).name;
+  return nodeData.doc_id || nodeData.id || "Node";
+};
+
 export default function DocumentGraphVisualization() {
-  const [graphMode, setGraphMode] = useState<GraphMode>("unconnected");
-  const [selectedNode, setSelectedNode] = useState<DocumentNode | null>(null);
+  const [graphMode, setGraphMode] = useState<GraphMode>("full");
+
+  // State for React Flow nodes and edges
+  // Node<DocumentNode> means each node object has a `data` property of type DocumentNode
+  const [nodes, setNodes, onNodesChange] = useNodesState<Node<DocumentNode>>(
+    []
+  );
+  const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]); // Edges are generally just Edge[]
+  console.log("nodes and edges", nodes, edges);
+  const [selectedNodeForPanel, setSelectedNodeForPanel] =
+    useState<DocumentNode | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [isAddNodeModalOpen, setIsAddNodeModalOpen] = useState<boolean>(false);
-  const [isFilterModalOpen, setIsFilterModalOpen] = useState<boolean>(false);
-  const [filter, setFilter] = useState<string>("");
-  const [unconnectedNodes, setUnconnectedNodes] = useState<DocumentNode[]>([]);
-  const [fullGraphNodes, setFullGraphNodes] = useState<DocumentNode[]>([]);
-  const [fullGraphEdges, setFullGraphEdges] = useState<GraphEdge[]>([]);
 
-  async function loadUnconnectedNodes() {
-    try {
-      setLoading(true);
-      const response: DocumentNode[] =
-        await categorizerAPI.getUnconnectedNodes();
-      setUnconnectedNodes(response);
-    } catch (error) {
-      console.error("Error fetching unconnected nodes:", error);
-    } finally {
-      setLoading(false);
-    }
-  }
+  // Correctly type nodeTypes for React Flow
+  const nodeTypes = useMemo(
+    () => ({
+      customNode: ReactFlowNode as ComponentType<RFNodeProps>, // Cast to ComponentType<NodeProps<any>>
+    }),
+    []
+  );
 
-  async function loadFullGraph() {
-    try {
+  const loadGraphData = useCallback(
+    async (mode: GraphMode) => {
       setLoading(true);
-      const allData = await categorizerAPI.fetchGraphData();
-      setFullGraphNodes(allData.nodes);
-      setFullGraphEdges(allData.edges);
-    } catch (error) {
-      console.error("Error fetching full graph data:", error);
-    } finally {
-      setLoading(false);
-    }
-  }
+      setSelectedNodeForPanel(null);
+      try {
+        let currentApiNodes: DocumentNode[] = [];
+        let currentApiEdges: ApiGraphEdge[] = [];
+
+        if (mode === "unconnected") {
+          currentApiNodes = await categorizerAPI.getUnconnectedNodes();
+          currentApiEdges = [];
+        } else {
+          const allData = await categorizerAPI.fetchGraphData();
+          currentApiNodes = allData.nodes;
+          currentApiEdges = allData.edges;
+        }
+
+        const rfNodes: Node<DocumentNode>[] = currentApiNodes.map(
+          (docNode, index) => ({
+            id: docNode.doc_id || docNode.id, // Use your domain ID for React Flow node ID
+            type: "customNode",
+            position: {
+              x: (index % 10) * 280, // Adjusted spacing
+              y: Math.floor(index / 10) * 180, // Adjusted spacing
+            },
+            data: docNode, // The 'data' prop gets your DocumentNode
+          })
+        );
+
+        const rfEdges: Edge[] = currentApiEdges.map((apiEdge, index) => ({
+          id: `e-${apiEdge.source}-${apiEdge.target}-${
+            apiEdge.relation || "rel"
+          }-${index}`,
+          source: apiEdge.source,
+          target: apiEdge.target,
+          label: apiEdge.relation,
+          type: "smoothstep",
+          markerEnd: {
+            type: MarkerType.ArrowClosed,
+          },
+          style: { strokeWidth: 2 },
+        }));
+
+        setNodes(rfNodes);
+        setEdges(rfEdges);
+      } catch (error) {
+        console.error(`Error fetching ${mode} graph data:`, error);
+        setNodes([]);
+        setEdges([]);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [setNodes, setEdges]
+  );
 
   useEffect(() => {
-    if (graphMode === "unconnected") {
-      loadUnconnectedNodes();
-    } else {
-      loadFullGraph();
-    }
-  }, [graphMode]);
+    loadGraphData(graphMode);
+  }, [graphMode, loadGraphData]);
 
-  const unconnectedGraph = useDocumentGraph({
-    documents: unconnectedNodes,
-    edges: [],
-    onNodeClick: (node) => {
-      setSelectedNode(node);
+  // The `node` parameter here is of type Node<DocumentNode>
+  const onNodeClickInternal = useCallback(
+    (event: React.MouseEvent, node: Node<DocumentNode>) => {
+      setSelectedNodeForPanel(node.data); // Pass the DocumentNode data to the panel
     },
-  });
+    []
+  );
 
-  const fullGraph = useHeterogeneousGraph({
-    nodes: fullGraphNodes,
-    edges: fullGraphEdges,
-    onNodeClick: (nodeData) => {
-      setSelectedNode(nodeData as DocumentNode);
-    },
-  });
+  const onConnect = useCallback(
+    (params: Connection | Edge) => setEdges((eds) => addEdge(params, eds)),
+    [setEdges]
+  );
+
   const handleAddNode = () => {
     setIsAddNodeModalOpen(true);
   };
@@ -83,19 +148,10 @@ export default function DocumentGraphVisualization() {
     try {
       await categorizerAPI.createNode(data);
       setIsAddNodeModalOpen(false);
-      if (graphMode === "unconnected") {
-        loadUnconnectedNodes();
-      } else {
-        loadFullGraph();
-      }
+      loadGraphData(graphMode); // Refresh graph
     } catch (error) {
       console.error("Error creando nodo:", error);
     }
-  };
-
-  const handleFilter = () => {
-    alert(`Filtrando grafo con criterio: ${filter}`);
-    setIsFilterModalOpen(true);
   };
 
   const handleModeSwitch = () => {
@@ -103,96 +159,61 @@ export default function DocumentGraphVisualization() {
   };
 
   return (
-    <div className="flex min-h-screen border-4 border-black bg-white">
-      <div className="w-1/4 border-r-4 border-black p-4 bg-[#FFD6E8]  origin-top-left transform flex flex-col gap-4">
-        <TitleComponent title="Document Graph" variant="yellow" />
+    <ReactFlowProvider>
+      <div className="flex min-h-screen border-4 border-black bg-white">
+        <div className="w-1/4 border-r-4 border-black p-4 bg-[#FFD6E8] flex flex-col gap-4">
+          <TitleComponent title="Document Graph" variant="yellow" />
+          <BrutalButton variant="blue" onClick={handleAddNode}>
+            Agregar Nodo
+          </BrutalButton>
+          <BrutalButton variant="orange" onClick={handleModeSwitch}>
+            Modo:{" "}
+            {graphMode === "unconnected" ? "Sin conexiones" : "Grafo completo"}
+          </BrutalButton>
+          <ButtonLink href="/advanced_graph_search" variant="outline" size="lg">
+            <p className="text-xl">Búsqueda Avanzada</p>
+          </ButtonLink>
+          <ButtonLink href="/" variant="outline" size="lg">
+            <p className="text-xl">Home</p>
+          </ButtonLink>
+        </div>
 
-        <BrutalButton variant="blue" onClick={handleAddNode}>
-          Agregar Nodo
-        </BrutalButton>
-
-        <BrutalButton variant="green" onClick={handleFilter}>
-          Filtrar
-        </BrutalButton>
-
-        <BrutalButton variant="orange" onClick={handleModeSwitch}>
-          Modo:{" "}
-          {graphMode === "unconnected" ? "Sin conexiones" : "Grafo completo"}
-        </BrutalButton>
-
-        <ButtonLink href="/" variant="outline" size="lg">
-          <p className="text-xl">Home</p>
-        </ButtonLink>
-      </div>
-
-      <div className="flex-1 p-4 bg-[#FFFCD6]  origin-top-left transform">
-        <div className="border-4 border-black p-2 rounded-md bg-[#FFFFFF] relative">
+        <div className="flex-1 p-4 bg-[#FFFCD6] relative">
           {loading ? (
-            <p className="text-center">Cargando datos...</p>
+            <div className="absolute inset-0 flex items-center justify-center">
+              Cargando datos del grafo...
+            </div>
           ) : (
-            <>
-              <div className="absolute top-4 right-4 flex gap-2 z-10">
-                <BrutalButton
-                  variant="blue"
-                  onClick={() =>
-                    graphMode === "unconnected"
-                      ? unconnectedGraph.zoomIn()
-                      : fullGraph.zoomIn()
-                  }
-                >
-                  Zoom +
-                </BrutalButton>
-                <BrutalButton
-                  variant="blue"
-                  onClick={() =>
-                    graphMode === "unconnected"
-                      ? unconnectedGraph.zoomOut()
-                      : fullGraph.zoomOut()
-                  }
-                >
-                  Zoom -
-                </BrutalButton>
-                <BrutalButton
-                  variant="blue"
-                  onClick={() =>
-                    graphMode === "unconnected"
-                      ? unconnectedGraph.resetView()
-                      : fullGraph.resetView()
-                  }
-                >
-                  Reset
-                </BrutalButton>
-              </div>
-              {graphMode === "unconnected" ? (
-                <svg ref={unconnectedGraph.svgRef} />
-              ) : (
-                <svg ref={fullGraph.svgRef} />
-              )}
-            </>
+            <ReactFlow
+              nodes={nodes}
+              edges={edges}
+              onNodesChange={onNodesChange}
+              onEdgesChange={onEdgesChange}
+              onConnect={onConnect}
+              onNodeClick={onNodeClickInternal}
+              nodeTypes={nodeTypes} // This should now be type-correct
+              fitView
+              className="bg-white border-4 border-black rounded-md"
+            >
+              <Controls />
+              <Background />
+            </ReactFlow>
           )}
         </div>
-      </div>
 
-      {isAddNodeModalOpen && (
-        <Modal onClose={() => setIsAddNodeModalOpen(false)}>
-          <CreateNodeWithTypeForm onCreateNode={handleCreateNode} />
-        </Modal>
-      )}
+        {isAddNodeModalOpen && (
+          <Modal onClose={() => setIsAddNodeModalOpen(false)}>
+            <CreateNodeWithTypeForm onCreateNode={handleCreateNode} />
+          </Modal>
+        )}
 
-      {isFilterModalOpen && (
-        <Modal onClose={() => setIsFilterModalOpen(false)}>
-          <FilterForm
-            filter={filter}
-            setFilter={setFilter}
-            handleFilter={handleFilter}
+        {selectedNodeForPanel && (
+          <NodeDetailsPanel
+            selectedNode={selectedNodeForPanel}
+            onClose={() => setSelectedNodeForPanel(null)}
           />
-        </Modal>
-      )}
-
-      <NodeDetailsPanel
-        selectedNode={selectedNode}
-        onClose={() => setSelectedNode(null)}
-      />
-    </div>
+        )}
+      </div>
+    </ReactFlowProvider>
   );
 }

@@ -19,6 +19,7 @@ export interface DocumentNode extends BaseNode {
   topics?: string[];
   style?: string;
   relationshipType?: string;
+  [key: string]: any;
 }
 
 export interface AuthorNode extends BaseNode {
