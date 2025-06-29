@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { BrutalInput } from "@/app/components/InputComponent/InputComponent";
 import { BrutalButton } from "@/app/components/ButtonComponent/ButtonComponent";
 import BrutalDropDown from "@/app/components/DropDownComponent/DropdownComponent";
@@ -8,6 +8,21 @@ import CustomCheckbox from "@/app/components/CheckBoxComponent/CheckBoxComponent
 import categorizerAPI from "@/app/utils/categorizerAPI"; // Assuming this API utility can be extended or used
 import { TitleComponent } from "@/app/components/TitleComponent/TtitleComponent";
 import Link from "next/link";
+import {
+  ReactFlowProvider,
+  ReactFlow,
+  Controls,
+  Background,
+  useNodesState,
+  useEdgesState,
+  Node,
+  Edge,
+  MarkerType,
+} from "@xyflow/react";
+import ReactFlowNode from "@/app/components/Graph/ReactFlowNode";
+import { DocumentNode } from "@/app/types/nodeTypes";
+import { GraphEdge as ApiGraphEdge } from "@/app/types/graphTypes";
+import { Modal } from "@/app/components/Modal/Modal";
 
 // --- TypeScript Interfaces based on the JSON structure ---
 interface StartNode {
@@ -118,6 +133,48 @@ export default function AdvancedGraphSearchPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [searchResult, setSearchResult] = useState<any | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [showRawModal, setShowRawModal] = useState(false);
+
+  const [nodes, setNodes, onNodesChange] =
+    useNodesState<Node<DocumentNode>>([]);
+  const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
+  const nodeTypes = useMemo(
+    () => ({
+      customNode: ReactFlowNode,
+    }),
+    []
+  );
+
+  useEffect(() => {
+    if (searchResult && searchResult.nodes && searchResult.edges) {
+      const rfNodes: Node<DocumentNode>[] = searchResult.nodes.map(
+        (n: DocumentNode, idx: number) => ({
+          id: n.doc_id || n.id,
+          type: "customNode",
+          position: { x: (idx % 10) * 250, y: Math.floor(idx / 10) * 150 },
+          data: n,
+        })
+      );
+
+      const rfEdges: Edge[] = searchResult.edges.map(
+        (e: ApiGraphEdge, idx: number) => ({
+          id: `e-${e.source}-${e.target}-${idx}`,
+          source: e.source,
+          target: e.target,
+          label: e.relation,
+          type: "smoothstep",
+          markerEnd: { type: MarkerType.ArrowClosed },
+          style: { strokeWidth: 2 },
+        })
+      );
+
+      setNodes(rfNodes);
+      setEdges(rfEdges);
+    } else {
+      setNodes([]);
+      setEdges([]);
+    }
+  }, [searchResult, setNodes, setEdges]);
 
   // --- Handlers for Start Nodes ---
   const handleAddStartNode = () => {
@@ -359,6 +416,37 @@ export default function AdvancedGraphSearchPage() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleCopyRaw = () => {
+    if (!searchResult) return;
+    navigator.clipboard.writeText(JSON.stringify(searchResult, null, 2));
+  };
+
+  const exportToCSV = () => {
+    if (!searchResult) return;
+
+    const arrayToCSV = (items: any[]) => {
+      if (!items.length) return "";
+      const headers = Object.keys(items[0]);
+      const rows = items.map((row) =>
+        headers
+          .map((field) => JSON.stringify(row[field] ?? ""))
+          .join(",")
+      );
+      return [headers.join(","), ...rows].join("\n");
+    };
+
+    const nodesCsv = arrayToCSV(searchResult.nodes || []);
+    const edgesCsv = arrayToCSV(searchResult.edges || []);
+    const csvContent = `nodes\n${nodesCsv}\n\nedges\n${edgesCsv}`;
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "advanced_search.csv";
+    link.click();
+    URL.revokeObjectURL(url);
   };
 
   const renderPropertyFilter = (
@@ -807,12 +895,46 @@ export default function AdvancedGraphSearchPage() {
       )}
 
       {searchResult && (
-        <div className="mt-6 p-4 bg-green-50 border-2 border-green-500 rounded-md">
-          <h4 className="text-xl font-bold mb-2">Resultado de la Búsqueda:</h4>
-          <pre className="text-sm bg-gray-800 text-white p-4 rounded overflow-x-auto">
-            {JSON.stringify(searchResult, null, 2)}
-          </pre>
+        <div className="mt-6 space-y-4">
+          <div className="flex gap-4">
+            <BrutalButton variant="blue" onClick={() => setShowRawModal(true)}>
+              Ver Resultado Raw
+            </BrutalButton>
+            <BrutalButton variant="orange" onClick={exportToCSV}>
+              Exportar CSV
+            </BrutalButton>
+          </div>
+          <ReactFlowProvider>
+            <div className="h-[600px] border-2 border-black rounded-md">
+              <ReactFlow
+                nodes={nodes}
+                edges={edges}
+                onNodesChange={onNodesChange}
+                onEdgesChange={onEdgesChange}
+                nodeTypes={nodeTypes}
+                fitView
+                className="bg-white"
+              >
+                <Controls />
+                <Background />
+              </ReactFlow>
+            </div>
+          </ReactFlowProvider>
         </div>
+      )}
+
+      {showRawModal && searchResult && (
+        <Modal onClose={() => setShowRawModal(false)}>
+          <div className="space-y-4">
+            <h3 className="text-lg font-bold">Resultado Raw</h3>
+            <pre className="text-sm bg-gray-800 text-white p-4 rounded overflow-x-auto whitespace-pre-wrap">
+              {JSON.stringify(searchResult, null, 2)}
+            </pre>
+            <BrutalButton variant="green" onClick={handleCopyRaw}>
+              Copiar JSON
+            </BrutalButton>
+          </div>
+        </Modal>
       )}
     </div>
   );
