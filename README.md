@@ -1,107 +1,104 @@
-A continuación se muestra un ejemplo de README.md que documenta la instalación, configuración y uso del proyecto:
-
----
-
 # Knowledge Base for Categorizer
 
-Este proyecto es una aplicación web desarrollada con [Next.js](https://nextjs.org/) que permite la carga, visualización y procesamiento de archivos para categorización. La aplicación incluye funcionalidades para:
+This project is a web application built with [Next.js](https://nextjs.org/) that allows uploading, viewing, and processing files for categorization. The application currently includes features such as:
 
-- **Subir archivos**: Permite seleccionar y cargar múltiples archivos.
-- **Listar archivos pendientes**: Muestra los archivos cargados que aún no han sido procesados.
-- **Procesar archivos**: Utiliza diferentes métodos (LLM, OCR o manual) para extraer metadatos y categorizar los archivos.
-- **Visualización**: Interfaz amigable con componentes personalizados, utilizando Tailwind CSS para estilos y Zustand para el manejo del estado.
-
----
-
-## Tabla de Contenidos
-
-- [Requisitos](#requisitos)
-- [Instalación](#instalación)
-- [Configuración](#configuración)
-- [Uso](#uso)
-  - [Desarrollo](#desarrollo)
-  - [Producción](#producción)
-- [Estructura del Proyecto](#estructura-del-proyecto)
-- [Tecnologías Utilizadas](#tecnologías-utilizadas)
-- [Contribución](#contribución)
-- [Licencia](#licencia)
+- **Upload files**: Select and upload multiple files.
+- **List pending files**: Display uploaded files that have not yet been processed.
+- **Process files**: Extract metadata and categorize files using LLM, OCR, or manual methods.
+- **Visualization**: A friendly interface with custom components styled using Tailwind CSS and state managed with Zustand.
 
 ---
 
-## Requisitos
+## Table of Contents
 
-- [Node.js](https://nodejs.org/) (v14 o superior)
-- [npm](https://www.npmjs.com/) o [Yarn](https://yarnpkg.com/)
-- Conexión a la API externa de categorización (se requiere configurar las variables de entorno)
+- [Requirements](#requirements)
+- [Installation](#installation)
+- [Configuration](#configuration)
+- [Usage](#usage)
+  - [Development](#development)
+  - [Production](#production)
+- [Project Structure](#project-structure)
+- [Technologies Used](#technologies-used)
+- [Contribution](#contribution)
+- [License](#license)
+- [Upcoming Updates](#upcoming-updates)
 
 ---
 
-## Instalación
+## Requirements
 
-1. **Clona el repositorio:**
+- [Node.js](https://nodejs.org/) (v14 or higher)
+- [npm](https://www.npmjs.com/) or [Yarn](https://yarnpkg.com/)
+- Connection to the external categorization API (environment variables must be configured)
+
+---
+
+## Installation
+
+1. **Clone the repository:**
 
    ```bash
-   git clone https://tu-repositorio-url.git
-   cd nombre-del-proyecto
+   git clone https://your-repo-url.git
+   cd project-name
    ```
 
-2. **Instala las dependencias:**
+2. **Install dependencies:**
 
-   Utilizando npm:
+   With npm:
    ```bash
    npm install
    ```
 
-   O, utilizando Yarn:
+   Or with Yarn:
    ```bash
    yarn install
    ```
 
 ---
 
-## Configuración
+## Configuration
 
-El proyecto utiliza variables de entorno para conectarse a la API de categorización y configurar otros parámetros. Crea un archivo `.env.local` en la raíz del proyecto y define al menos las siguientes variables:
+The project uses environment variables to connect to the categorizer API and configure other parameters. Create a `.env.local` file in the project root and define at least the following variables:
 
 ```env
-# URL base para las llamadas al API de categorizador
-NEXT_PUBLIC_CATEGORIZER_URL=https://tu-api-categorizer.com
+# Base URL for calls to the categorizer API
+NEXT_PUBLIC_CATEGORIZER_URL=https://your-categorizer-api.com
 
-# URL base para las llamadas al API para procesamiento (LLM, OCR, etc.)
-NEXT_PUBLIC_API_URL=https://tu-api-de-procesamiento.com
+# Base URL for calls to the processing API (LLM, OCR, etc.)
+NEXT_PUBLIC_API_URL=https://your-processing-api.com
 ```
 
-Asegúrate de reemplazar las URLs por las correspondientes a tu entorno.
+Make sure to replace the URLs with those corresponding to your environment.
 
 ---
 
-## Uso
+## Usage
 
-### Desarrollo
+### Development
 
-Para iniciar el servidor de desarrollo y probar la aplicación localmente, ejecuta:
+To start the development server and test the application locally, run:
 
 ```bash
 npm run dev
 ```
 
-O, si usas Yarn:
+Or if you use Yarn:
 
 ```bash
 yarn dev
 ```
 
-La aplicación estará disponible en [http://localhost:3000](http://localhost:3000).
+The app will be available at [http://localhost:3000](http://localhost:3000).
 
-### Producción
+### Production
 
-1. **Compilar la aplicación:**
+1. **Build the application:**
 
    ```bash
    npm run build
    ```
 
-2. **Iniciar el servidor en modo producción:**
+2. **Start the server in production mode:**
 
    ```bash
    npm run start
@@ -109,52 +106,61 @@ La aplicación estará disponible en [http://localhost:3000](http://localhost:30
 
 ---
 
-## Estructura del Proyecto
+## Project Structure
 
-El proyecto cuenta con la siguiente organización de directorios y archivos principales:
+The project is organized with the following main directories and files:
 
-- **`app/`**: Contiene las páginas y componentes principales.
-  - **`layout.tsx`**: Define la estructura global de la aplicación e importa hojas de estilos.
-  - **`page.tsx`**: Página principal que muestra opciones de categorización.
-  - **`upload-files/`**: Página para la carga de múltiples archivos.
-  - **`pending/`**: Página que lista los archivos pendientes de procesamiento.
-  - **`processing/`**: Página para procesar archivos (extraer metadatos con LLM y OCR).
-- **`components/`**: Componentes reutilizables (botones, listas, formularios, etc.).
-- **`store/filestore.ts`**: Maneja el estado de los archivos utilizando Zustand y persiste la información.
-- **`lib/`**: Utilidades generales (por ejemplo, funciones para combinar clases CSS).
-- **`utils/categorizerAPI.ts`**: Funciones para interactuar con el API del categorizador, incluyendo métodos para subir archivos, obtener archivos, procesar con LLM y OCR, y guardar metadatos.
-- **Archivos de configuración**:
-  - `next.config.ts`: Configuración de Next.js.
-  - `next-env.d.ts`: Definiciones de tipos para Next.js.
-
----
-
-## Tecnologías Utilizadas
-
-- **Next.js**: Framework para React que facilita el desarrollo de aplicaciones web con SSR y rutas automáticas.
-- **React**: Biblioteca para construir interfaces de usuario.
-- **Tailwind CSS**: Framework de CSS para estilos rápidos y personalizados.
-- **Zustand**: Biblioteca para manejo del estado global.
-- **Axios y Fetch API**: Para realizar peticiones HTTP a la API.
-- **TypeScript**: Superset de JavaScript que añade tipado estático.
+- **`app/`**: Contains pages and main components.
+  - **`layout.tsx`**: Defines the global layout and imports stylesheets.
+  - **`page.tsx`**: Main page showing categorization options.
+  - **`upload-files/`**: Page for uploading multiple files.
+  - **`pending/`**: Page listing files pending processing.
+  - **`processing/`**: Page for processing files (extracting metadata with LLM and OCR).
+- **`components/`**: Reusable components (buttons, lists, forms, etc.).
+- **`store/filestore.ts`**: Manages file state using Zustand and persists information.
+- **`lib/`**: General utilities (for example, functions to merge CSS classes).
+- **`utils/categorizerAPI.ts`**: Functions to interact with the categorizer API, including methods to upload files, get files, process with LLM and OCR, and save metadata.
+- **Configuration files**:
+  - `next.config.ts`: Next.js configuration.
+  - `next-env.d.ts`: Type definitions for Next.js.
 
 ---
 
-## Contribución
+## Technologies Used
 
-Si deseas contribuir al proyecto, sigue estos pasos:
-
-1. Haz un fork del repositorio.
-2. Crea una nueva rama para tu feature o fix: `git checkout -b mi-feature`.
-3. Realiza tus cambios y haz commits descriptivos.
-4. Envía un pull request describiendo detalladamente tus cambios.
-
----
-
-## Licencia
-
-Este proyecto se distribuye bajo la [Licencia MIT](LICENSE).
+- **Next.js**: React framework that simplifies development with SSR and automatic routes.
+- **React**: Library for building user interfaces.
+- **Tailwind CSS**: Utility-first CSS framework for quick styling.
+- **Zustand**: Library for global state management.
+- **Axios and Fetch API**: For making HTTP requests to the API.
+- **TypeScript**: JavaScript superset that adds static typing.
 
 ---
 
-Este README proporciona las instrucciones básicas para instalar, configurar y utilizar la aplicación. Asegúrate de revisar cada sección y adaptarla a las particularidades de tu entorno y requisitos específicos.
+## Contribution
+
+If you want to contribute to the project, follow these steps:
+
+1. Fork the repository.
+2. Create a new branch for your feature or fix: `git checkout -b my-feature`.
+3. Make your changes and commit them with descriptive messages.
+4. Submit a pull request detailing your changes.
+
+---
+
+## License
+
+This project is distributed under the [MIT License](LICENSE).
+
+---
+
+## Upcoming Updates
+
+The following features are planned for future releases:
+
+- Voice, music, and video support in the RAG graph system.
+- Tools to experiment with graph algorithms and visualize data.
+
+---
+
+This README provides the basic instructions for installing, configuring, and using the application. Review each section and adapt it to your environment and specific requirements.
