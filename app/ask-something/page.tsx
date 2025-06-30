@@ -72,7 +72,22 @@ export default function RagBrutalistSearch() {
     try {
       const payload = { query, ...flags, ...ks, file };
       const res = await categorizerAPI.multimodalSearch(payload);
-      setData(res);
+      const seen = new Set<string>();
+      const dedupe = (arr?: Hit[]) =>
+        arr?.filter((h) => {
+          if (seen.has(h.id)) return false;
+          seen.add(h.id);
+          return true;
+        });
+      const clean: SearchResponse = {
+        text_results: dedupe(res.text_results),
+        pdf_results: dedupe(res.pdf_results),
+        image_clip: dedupe(res.image_clip),
+        image_ocr: dedupe(res.image_ocr),
+        image_description: dedupe(res.image_description),
+        query_used: res.query_used,
+      };
+      setData(clean);
     } catch (e: any) {
       setErr(e.message ?? "Error");
       setData(null);
@@ -86,39 +101,21 @@ export default function RagBrutalistSearch() {
     hits && hits.length ? (
       <div className="mb-8">
         <h2 className="font-bold text-xl mb-2">{title}</h2>
-        <div className="grid gap-2">
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
           {hits.map((h) => {
-            /* PDF: botón que abre modal, demás: enlace */
             const isPdf = h.text_chunk !== undefined;
-            const fileName =
-              h.file_location?.split("/").pop() ??
-              h.original_doc_id ??
-              "sin_nombre";
-
-            return isPdf ? (
-              <button
-                key={h.id}
-                onClick={() => setOpenChunk({ text: h.text_chunk!, meta: h })}
-                className="text-left border-4 border-black bg-white p-2 hover:bg-yellow-100 text-sm break-all"
-              >
-                <b>Pág.</b> {h.page_number} | <b>Dist.</b>{" "}
-                {h.distance.toFixed(3)} | <b>File:</b> {fileName}
-              </button>
-            ) : (
-              <a
-                key={h.id}
-                href={
-                  h.file_location
-                    ? `http://127.0.0.1:8000/uploads/${h.file_location}`
-                    : "#"
-                }
-                target="_blank"
-                className="border-4 border-black bg-white p-2 hover:bg-yellow-100 text-sm break-all"
-              >
-                <b>ID:</b> {h.id.slice(0, 8)}… | <b>Dist.</b>{" "}
-                {h.distance.toFixed(3)} | <b>File:</b> {fileName}
-              </a>
-            );
+            if (isPdf) {
+              return (
+                <button
+                  key={h.id}
+                  onClick={() => setOpenChunk({ text: h.text_chunk!, meta: h })}
+                  className="text-left border-4 border-black bg-white p-2 hover:bg-yellow-100 text-sm break-all"
+                >
+                  <b>Pág.</b> {h.page_number} | <b>Dist.</b> {h.distance.toFixed(3)}
+                </button>
+              );
+            }
+            return <SearchResultPreview key={h.id} hit={h} />;
           })}
         </div>
       </div>
