@@ -23,6 +23,7 @@ import ReactFlowNode from "@/app/components/Graph/ReactFlowNode";
 import { DocumentNode } from "@/app/types/nodeTypes";
 import { GraphEdge as ApiGraphEdge } from "@/app/types/graphTypes";
 import { Modal } from "@/app/components/Modal/Modal";
+import "@xyflow/react/dist/style.css";
 
 // --- TypeScript Interfaces based on the JSON structure ---
 interface StartNode {
@@ -135,8 +136,9 @@ export default function AdvancedGraphSearchPage() {
   const [error, setError] = useState<string | null>(null);
   const [showRawModal, setShowRawModal] = useState(false);
 
-  const [nodes, setNodes, onNodesChange] =
-    useNodesState<Node<DocumentNode>>([]);
+  const [nodes, setNodes, onNodesChange] = useNodesState<Node<DocumentNode>>(
+    []
+  );
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
   const nodeTypes = useMemo(
     () => ({
@@ -430,9 +432,7 @@ export default function AdvancedGraphSearchPage() {
       if (!items.length) return "";
       const headers = Object.keys(items[0]);
       const rows = items.map((row) =>
-        headers
-          .map((field) => JSON.stringify(row[field] ?? ""))
-          .join(",")
+        headers.map((field) => JSON.stringify(row[field] ?? "")).join(",")
       );
       return [headers.join(","), ...rows].join("\n");
     };

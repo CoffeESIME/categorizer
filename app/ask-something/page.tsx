@@ -7,6 +7,7 @@ import { BrutalInput } from "../components/InputComponent/InputComponent";
 import BrutalCheckbox from "../components/CheckBoxComponent/CheckBoxComponent";
 import { ButtonLink } from "../components/ButtonLink/ButtonLink";
 import categorizerAPI from "../utils/categorizerAPI";
+import SearchResultPreview from "../components/SearchComponents/SearchResultPreview";
 
 /* ──────────────── Tipos ──────────────── */
 interface Hit {
@@ -111,7 +112,8 @@ export default function RagBrutalistSearch() {
                   onClick={() => setOpenChunk({ text: h.text_chunk!, meta: h })}
                   className="text-left border-4 border-black bg-white p-2 hover:bg-yellow-100 text-sm break-all"
                 >
-                  <b>Pág.</b> {h.page_number} | <b>Dist.</b> {h.distance.toFixed(3)}
+                  <b>Pág.</b> {h.page_number} | <b>Dist.</b>{" "}
+                  {h.distance.toFixed(3)}
                 </button>
               );
             }
