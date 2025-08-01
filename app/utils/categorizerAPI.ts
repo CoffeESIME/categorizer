@@ -477,8 +477,11 @@ class CategorizerAPI {
     const form = new FormData();
     Object.entries(payload).forEach(([k, v]) => {
       if (v === undefined || v === null) return;
-      if (k === "file" && v instanceof File) form.append("file", v);
-      else form.append(k, String(v));
+      if (v instanceof File) {
+        form.append(k, v);
+      } else {
+        form.append(k, String(v));
+      }
     });
 
     try {
