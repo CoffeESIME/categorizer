@@ -122,6 +122,23 @@ export const ProcessOptions: React.FC<ProcessOptionsProps> = ({
           "multilingual",
         ]);
         break;
+      case "video":
+        setRenderFields([
+          "description",
+          "author",
+          "title",
+          "content",
+          "tags",
+          "sentiment",
+          "work",
+          "languages",
+          "analysis",
+          "categories",
+          "keywords",
+          "content_type",
+          "multilingual",
+        ]);
+        break;
       default:
         setRenderFields([]);
         break;
@@ -136,7 +153,8 @@ export const ProcessOptions: React.FC<ProcessOptionsProps> = ({
     } else if (
       activeProcessingMethod === "ocr" ||
       activeProcessingMethod === "llm" ||
-      activeProcessingMethod === "audio"
+      activeProcessingMethod === "audio" ||
+      activeProcessingMethod === "video"
     ) {
       return llmModelOptions.filter(
         (model) =>
@@ -207,6 +225,8 @@ export const ProcessOptions: React.FC<ProcessOptionsProps> = ({
                 ? t("processOptions.imageDescription")
                 : option === "audio"
                 ? t("processOptions.audio")
+                : option === "video"
+                ? t("processOptions.video")
                 : option === "llm"
                 ? t("processOptions.llm")
                 : t("processOptions.manual")}
@@ -290,7 +310,8 @@ export const ProcessOptions: React.FC<ProcessOptionsProps> = ({
             )}
             {(activeProcessingMethod === "llm" ||
               activeProcessingMethod === "image_description" ||
-              activeProcessingMethod === "audio") && (
+              activeProcessingMethod === "audio" ||
+              activeProcessingMethod === "video") && (
               <BrutalButton
                 onClick={() =>
                   processWithLLM(activeProcessingMethod as TaskType)
