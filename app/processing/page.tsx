@@ -155,6 +155,8 @@ export default function ProcessFiles() {
         defaultProcessingMethod = "llm";
       } else if (mainType === "audio") {
         defaultProcessingMethod = "audio";
+      } else if (mainType === "video") {
+        defaultProcessingMethod = "video";
       }
 
       // Determinar default embedding type
@@ -224,6 +226,8 @@ export default function ProcessFiles() {
           defaultProcessingMethod = "llm";
         } else if (mainType === "audio") {
           defaultProcessingMethod = "audio";
+        } else if (mainType === "video") {
+          defaultProcessingMethod = "video";
         }
 
         // Determinar default embedding type
@@ -275,7 +279,7 @@ export default function ProcessFiles() {
       case "image":
         return ["ocr", "image_description", "manual"];
       case "video":
-        return ["llm", "manual"];
+        return ["video", "manual"];
       case "audio":
         return ["audio", "manual"];
       case "application":
@@ -406,6 +410,12 @@ export default function ProcessFiles() {
           file_url: currentFile.file_url,
           ...commonLLMOptions,
         });
+      } else if (taskType === "video") {
+        result = await categorizerAPI.processLLM({
+          task: "video",
+          file_url: currentFile.file_url,
+          ...commonLLMOptions,
+        });
       }
 
       if (result) {
@@ -426,7 +436,8 @@ export default function ProcessFiles() {
           if (
             taskType === "ocr" ||
             taskType === "text" ||
-            taskType === "audio"
+            taskType === "audio" ||
+            taskType === "video"
           ) {
             if (autoFields.title)
               updates.title = mergeField(existingMetadata.title, llmData.title);
@@ -467,6 +478,12 @@ export default function ProcessFiles() {
               llmData.multilingual !== undefined
                 ? llmData.multilingual
                 : existingMetadata.multilingual;
+            if (taskType === "video" && autoFields.description) {
+              updates.description = mergeField(
+                existingMetadata.description,
+                llmData.description
+              );
+            }
             // extracted text is merged into the content field
           } else if (taskType === "image_description") {
             if (autoFields.description)

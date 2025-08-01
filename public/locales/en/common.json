@@ -57,6 +57,7 @@
     "llm": "LLM",
     "imageDescription": "Image Description",
     "audio": "Audio/Music",
+    "video": "Video",
     "model": "Model",
     "temperature": "Temperature",
     "processWithLLM": "Process with LLM",

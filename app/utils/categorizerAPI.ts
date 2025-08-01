@@ -64,14 +64,20 @@ export interface OCRResult {
 }
 
 // Tipos extra
-export type TaskType = "text" | "image_description" | "ocr" | "audio";
+export type TaskType =
+  | "text"
+  | "image_description"
+  | "ocr"
+  | "audio"
+  | "video";
 export type OCRMethod = "tesseract" | "llm";
 export type ProcessingMethod =
   | "manual"
   | "llm"
   | "ocr"
   | "image_description"
-  | "audio";
+  | "audio"
+  | "video";
 
 // Interfaz para la creación de relaciones
 export interface CreateRelationshipData {
