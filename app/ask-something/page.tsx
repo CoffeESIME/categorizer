@@ -26,6 +26,10 @@ interface SearchResponse {
   image_clip?: Hit[];
   image_ocr?: Hit[];
   image_description?: Hit[];
+  audio_text?: Hit[];
+  audio_audio?: Hit[];
+  video_text?: Hit[];
+  video_video?: Hit[];
   query_used: string;
 }
 
@@ -33,17 +37,27 @@ interface SearchResponse {
 export default function RagBrutalistSearch() {
   const [query, setQuery] = useState("");
   const [file, setFile] = useState<File | null>(null);
+  const [audioFile, setAudioFile] = useState<File | null>(null);
+  const [videoFile, setVideoFile] = useState<File | null>(null);
 
   /* flags & k */
   const [flags, setFlags] = useState({
     search_text: true,
     search_pdf: false,
     search_image: true,
+    search_audio: false,
+    search_video: false,
     use_clip: true,
     use_ocr: false,
     use_description: false,
   });
-  const [ks, setKs] = useState({ k_text: 5, k_pdf: 20, k_image: 10 });
+  const [ks, setKs] = useState({
+    k_text: 5,
+    k_pdf: 20,
+    k_image: 10,
+    k_audio: 5,
+    k_video: 5,
+  });
 
   /* UI state */
   const [data, setData] = useState<SearchResponse | null>(null);
@@ -62,7 +76,10 @@ export default function RagBrutalistSearch() {
   /* helpers */
   const toggle = (k: keyof typeof flags) =>
     setFlags((p) => ({ ...p, [k]: !p[k] }));
-  const updateK = (dom: "text" | "pdf" | "image", val: number) =>
+  const updateK = (
+    dom: "text" | "pdf" | "image" | "audio" | "video",
+    val: number
+  ) =>
     setKs((p) => ({ ...p, [`k_${dom}`]: val }));
 
   /* submit */
@@ -71,7 +88,14 @@ export default function RagBrutalistSearch() {
     setErr("");
     setLoading(true);
     try {
-      const payload = { query, ...flags, ...ks, file };
+      const payload = {
+        query,
+        ...flags,
+        ...ks,
+        file,
+        audio_file: audioFile,
+        video_file: videoFile,
+      };
       const res = await categorizerAPI.multimodalSearch(payload);
       const seen = new Set<string>();
       const dedupe = (arr?: Hit[]) =>
@@ -86,6 +110,10 @@ export default function RagBrutalistSearch() {
         image_clip: dedupe(res.image_clip),
         image_ocr: dedupe(res.image_ocr),
         image_description: dedupe(res.image_description),
+        audio_text: dedupe(res.audio_text),
+        audio_audio: dedupe(res.audio_audio),
+        video_text: dedupe(res.video_text),
+        video_video: dedupe(res.video_video),
         query_used: res.query_used,
       };
       setData(clean);
@@ -159,11 +187,23 @@ export default function RagBrutalistSearch() {
             onChange={(e) => setFile(e.target.files?.[0] || null)}
             className="border-2 border-black p-1"
           />
+          <input
+            type="file"
+            accept="audio/*"
+            onChange={(e) => setAudioFile(e.target.files?.[0] || null)}
+            className="border-2 border-black p-1"
+          />
+          <input
+            type="file"
+            accept="video/*"
+            onChange={(e) => setVideoFile(e.target.files?.[0] || null)}
+            className="border-2 border-black p-1"
+          />
         </div>
 
         {/* checkboxes */}
         <div className="flex gap-4 flex-wrap">
-          {["search_text", "search_pdf", "search_image"].map((k) => (
+          {["search_text", "search_pdf", "search_image", "search_audio", "search_video"].map((k) => (
             <BrutalCheckbox
               key={k}
               label={k}
@@ -184,7 +224,7 @@ export default function RagBrutalistSearch() {
 
         {/* k values */}
         <div className="flex gap-4 flex-wrap">
-          {(["text", "pdf", "image"] as const).map((dom) => (
+          {(["text", "pdf", "image", "audio", "video"] as const).map((dom) => (
             <div
               key={dom}
               className="flex items-center gap-2 border-4 border-black p-2 bg-yellow-200 rounded"
@@ -203,7 +243,10 @@ export default function RagBrutalistSearch() {
 
         <BrutalButton
           variant="red"
-          disabled={loading || !query.trim()}
+          disabled={
+            loading ||
+            (!query.trim() && !file && !audioFile && !videoFile)
+          }
           className="px-6 py-3 text-xl border-4 border-black w-fit"
         >
           {loading ? "Buscando…" : "Buscar"}
@@ -220,8 +263,16 @@ export default function RagBrutalistSearch() {
             {renderHits("Imágenes CLIP", data.image_clip)}
             {renderHits("Imágenes OCR", data.image_ocr)}
             {renderHits("Imágenes Descripción", data.image_description)}
+            {renderHits("Audio Texto", data.audio_text)}
+            {renderHits("Audio Audio", data.audio_audio)}
+            {renderHits("Video Texto", data.video_text)}
+            {renderHits("Video Video", data.video_video)}
             {!Object.keys(data).some(
-              (k) => k.endsWith("_results") || k.startsWith("image_")
+              (k) =>
+                k.endsWith("_results") ||
+                k.startsWith("image_") ||
+                k.startsWith("audio_") ||
+                k.startsWith("video_")
             ) && <p>No se encontraron coincidencias.</p>}
           </>
         ) : (
