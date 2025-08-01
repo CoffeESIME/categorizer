@@ -375,7 +375,6 @@ export default function ProcessFiles() {
       processingMethod: taskType as ProcessingMethod, // Ensure taskType is a valid ProcessingMethod
       llmErrorResponse: "",
     });
-
     try {
       let result;
       const commonLLMOptions = {
@@ -424,7 +423,11 @@ export default function ProcessFiles() {
             llmErrorResponse: "",
           };
 
-          if (taskType === "ocr" || taskType === "text" || taskType === "audio") {
+          if (
+            taskType === "ocr" ||
+            taskType === "text" ||
+            taskType === "audio"
+          ) {
             if (autoFields.title)
               updates.title = mergeField(existingMetadata.title, llmData.title);
             if (autoFields.author)
@@ -509,10 +512,18 @@ export default function ProcessFiles() {
     }
   };
 
-  const processWithLLM = async () => {
+  const processWithLLM = async (taskType?: TaskType) => {
     //
     const currentFile = getCurrentFile();
     if (!currentFile) return;
+
+    // Si se proporciona un taskType específico, usarlo
+    if (taskType) {
+      processWithLLMUnified(taskType);
+      return;
+    }
+
+    // Fallback al comportamiento anterior si no se proporciona taskType
     const mainType = getMainFileType(currentFile); //
     if (mainType === "image") {
       processWithLLMUnified("image_description"); //
