@@ -559,18 +559,6 @@ export const MetadataForm: React.FC<MetadataFormProps> = ({
                   multiline
                 />
               </div>
-              {metadata.extractedText && (
-                <div>
-                  <label className="font-bold">
-                    {t("metadataForm.fields.extractedText")}
-                  </label>
-                  <div className="mt-1 p-2 border-4 border-black rounded-lg bg-gray-100 max-h-40 overflow-y-auto">
-                    <p className="whitespace-pre-wrap text-sm">
-                      {metadata.extractedText}
-                    </p>
-                  </div>
-                </div>
-              )}
             </div>
           )}
         </>

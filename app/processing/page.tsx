@@ -28,7 +28,7 @@ export type ProcessingFileMetadata = {
   content?: string;
   tags: string[];
   sourceType?: string;
-  extractedText?: string;
+  // extracted text from OCR or audio will be merged into `content`
   processingStatus: "pending" | "processing" | "completed" | "failed";
   processingMethod?: ProcessingMethod;
   llmErrorResponse?: string;
@@ -153,6 +153,8 @@ export default function ProcessFiles() {
             file.file_type?.includes("text")))
       ) {
         defaultProcessingMethod = "llm";
+      } else if (mainType === "audio") {
+        defaultProcessingMethod = "audio";
       }
 
       // Determinar default embedding type
@@ -220,6 +222,8 @@ export default function ProcessFiles() {
               currentFile.file_type?.includes("text")))
         ) {
           defaultProcessingMethod = "llm";
+        } else if (mainType === "audio") {
+          defaultProcessingMethod = "audio";
         }
 
         // Determinar default embedding type
@@ -271,8 +275,9 @@ export default function ProcessFiles() {
       case "image":
         return ["ocr", "image_description", "manual"];
       case "video":
+        return ["llm", "manual"];
       case "audio":
-        return ["llm", "manual"]; // Assuming general LLM for these types for now
+        return ["audio", "manual"];
       case "application":
         if (
           file.file_type?.includes("json") ||
@@ -321,7 +326,6 @@ export default function ProcessFiles() {
                   "file_type",
                   "llmErrorResponse",
                   "sourceType",
-                  "extractedText",
                 ].includes(key)
               ) {
                 return false;
@@ -397,6 +401,12 @@ export default function ProcessFiles() {
           file_url: currentFile.file_url,
           ...commonLLMOptions,
         });
+      } else if (taskType === "audio") {
+        result = await categorizerAPI.processLLM({
+          task: "audio",
+          file_url: currentFile.file_url,
+          ...commonLLMOptions,
+        });
       }
 
       if (result) {
@@ -414,7 +424,7 @@ export default function ProcessFiles() {
             llmErrorResponse: "",
           };
 
-          if (taskType === "ocr" || taskType === "text") {
+          if (taskType === "ocr" || taskType === "text" || taskType === "audio") {
             if (autoFields.title)
               updates.title = mergeField(existingMetadata.title, llmData.title);
             if (autoFields.author)
@@ -454,8 +464,7 @@ export default function ProcessFiles() {
               llmData.multilingual !== undefined
                 ? llmData.multilingual
                 : existingMetadata.multilingual;
-            if (taskType === "ocr")
-              updates.extractedText = llmData.text || llmData.ocr_text;
+            // extracted text is merged into the content field
           } else if (taskType === "image_description") {
             if (autoFields.description)
               updates.description = mergeField(
