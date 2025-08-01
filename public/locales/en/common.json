@@ -56,6 +56,7 @@
     "ocr": "OCR",
     "llm": "LLM",
     "imageDescription": "Image Description",
+    "audio": "Audio/Music",
     "model": "Model",
     "temperature": "Temperature",
     "processWithLLM": "Process with LLM",
@@ -85,8 +86,7 @@
       "topics": "Topics",
       "style": "Style",
       "color_palette": "Color Palette",
-      "composition": "Composition",
-      "extractedText": "Extracted Text"
+      "composition": "Composition"
     },
     "placeholders": {
       "title": "Content title",

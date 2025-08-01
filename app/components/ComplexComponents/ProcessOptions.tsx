@@ -78,7 +78,6 @@ export const ProcessOptions: React.FC<ProcessOptionsProps> = ({
           "keywords",
           "content_type",
           "multilingual",
-          "extractedText",
         ]);
         break;
       case "image_description":
@@ -107,6 +106,22 @@ export const ProcessOptions: React.FC<ProcessOptionsProps> = ({
           "multilingual",
         ]);
         break;
+      case "audio":
+        setRenderFields([
+          "author",
+          "title",
+          "content",
+          "tags",
+          "sentiment",
+          "work",
+          "languages",
+          "analysis",
+          "categories",
+          "keywords",
+          "content_type",
+          "multilingual",
+        ]);
+        break;
       default:
         setRenderFields([]);
         break;
@@ -120,7 +135,8 @@ export const ProcessOptions: React.FC<ProcessOptionsProps> = ({
       );
     } else if (
       activeProcessingMethod === "ocr" ||
-      activeProcessingMethod === "llm"
+      activeProcessingMethod === "llm" ||
+      activeProcessingMethod === "audio"
     ) {
       return llmModelOptions.filter(
         (model) =>
@@ -189,6 +205,8 @@ export const ProcessOptions: React.FC<ProcessOptionsProps> = ({
                 ? t("processOptions.ocr")
                 : option === "image_description"
                 ? t("processOptions.imageDescription")
+                : option === "audio"
+                ? t("processOptions.audio")
                 : option === "llm"
                 ? t("processOptions.llm")
                 : t("processOptions.manual")}
@@ -271,7 +289,8 @@ export const ProcessOptions: React.FC<ProcessOptionsProps> = ({
               </BrutalButton>
             )}
             {(activeProcessingMethod === "llm" ||
-              activeProcessingMethod === "image_description") && (
+              activeProcessingMethod === "image_description" ||
+              activeProcessingMethod === "audio") && (
               <BrutalButton
                 onClick={() =>
                   processWithLLM(activeProcessingMethod as TaskType)
