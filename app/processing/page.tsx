@@ -10,6 +10,7 @@ import categorizerAPI, {
   ProcessingMethod,
   TaskType,
 } from "../utils/categorizerAPI";
+import { LlmConfig } from "../types/llmConfig";
 import { FileList } from "../components/ComplexComponents/FileList";
 import { FilePreview } from "../components/ComplexComponents/FilePreview";
 import { ProcessOptions } from "../components/ComplexComponents/ProcessOptions";
@@ -98,9 +99,13 @@ export default function ProcessFiles() {
   const [selectedMethodForUI, setSelectedMethodForUI] =
     useState<ProcessingMethod>("manual");
 
-  const [llmConfig, setLlmConfig] = useState({
+  const [llmConfig, setLlmConfig] = useState<LlmConfig>({
     model: "deepseek-r1:14b",
+    analysis_model: "deepseek-r1:14b",
     temperature: 0.7,
+    vision_temperature: 0.7,
+    prompt: "Describe brevemente el fotograma.",
+    context: "",
   });
   const [isProcessing, setIsProcessing] = useState(false);
   const router = useRouter();
@@ -414,7 +419,12 @@ export default function ProcessFiles() {
         result = await categorizerAPI.processLLM({
           task: "video",
           file_url: currentFile.file_url,
-          ...commonLLMOptions,
+          model: llmConfig.model,
+          vision_temperature: llmConfig.vision_temperature ?? llmConfig.temperature,
+          analysis_model: llmConfig.analysis_model,
+          temperature: llmConfig.temperature,
+          prompt: llmConfig.prompt,
+          context: llmConfig.context,
         });
       }
 

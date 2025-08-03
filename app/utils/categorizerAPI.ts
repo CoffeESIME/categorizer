@@ -53,6 +53,12 @@ export interface ProcessLLMUnifiedOptions {
   file_url?: string;
   model: string;
   temperature: number;
+  /** Optional temperature for the vision model when processing videos */
+  vision_temperature?: number;
+  /** Model used to analyze text produced by the vision model in videos */
+  analysis_model?: string;
+  /** Additional context for the model, useful for video analysis */
+  context?: string;
   ocr_method?: OCRMethod;
   prompt?: string;
 }
