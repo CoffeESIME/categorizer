@@ -40,7 +40,6 @@ export const MetadataForm: React.FC<MetadataFormProps> = ({
   const [tagInputValue, setTagInputValue] = useState("");
 
   if (!metadata) return null;
-
   const handleTagInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
       e.preventDefault();
@@ -527,6 +526,20 @@ export const MetadataForm: React.FC<MetadataFormProps> = ({
                   className="w-full p-2 border-4 border-black rounded-lg"
                 />
               </div>
+
+              <div>
+                <label className="font-bold">
+                  {t("metadataForm.fields.content")}
+                </label>
+                <BrutalInput
+                  type="textarea"
+                  placeholder={t("metadataForm.placeholders.regularContent")}
+                  value={metadata.content || ""}
+                  onChange={(e) => updateMetadata({ content: e.target.value })}
+                  className="w-full p-2 border-4 border-black rounded-lg h-32"
+                  multiline
+                />
+              </div>
             </div>
           ) : (
             // ... General/Manual Form Fields ...
@@ -579,7 +592,9 @@ export const MetadataForm: React.FC<MetadataFormProps> = ({
                       type="text"
                       placeholder={t("metadataForm.placeholders.style")}
                       value={metadata.style || ""}
-                      onChange={(e) => updateMetadata({ style: e.target.value })}
+                      onChange={(e) =>
+                        updateMetadata({ style: e.target.value })
+                      }
                       className="w-full p-2 border-4 border-black rounded-lg"
                     />
                   </div>

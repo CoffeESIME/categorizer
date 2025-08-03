@@ -423,7 +423,8 @@ export default function ProcessFiles() {
           task: "video",
           file_url: currentFile.file_url,
           model: llmConfig.model,
-          vision_temperature: llmConfig.vision_temperature ?? llmConfig.temperature,
+          vision_temperature:
+            llmConfig.vision_temperature ?? llmConfig.temperature,
           analysis_model: llmConfig.analysis_model,
           temperature: llmConfig.temperature,
           prompt: llmConfig.prompt,
@@ -445,7 +446,7 @@ export default function ProcessFiles() {
             processingStatus: "completed",
             llmErrorResponse: "",
           };
-
+          console.log("da result,", result);
           if (
             taskType === "ocr" ||
             taskType === "text" ||
@@ -462,7 +463,10 @@ export default function ProcessFiles() {
             if (autoFields.content)
               updates.content = mergeField(
                 existingMetadata.content,
-                llmData.content || llmData.text || llmData.ocr_text
+                llmData.content ||
+                  llmData.text ||
+                  llmData.ocr_text ||
+                  llmData.raw_transcription
               );
             if (autoFields.tags)
               updates.tags = mergeArrayField(
@@ -492,6 +496,33 @@ export default function ProcessFiles() {
                 ? llmData.multilingual
                 : existingMetadata.multilingual;
             if (taskType === "video") {
+              if (autoFields.description)
+                updates.description = mergeField(
+                  existingMetadata.description,
+                  llmData.description
+                );
+              if (autoFields.topics)
+                updates.topics = mergeArrayField(
+                  existingMetadata.topics,
+                  llmData.topics
+                );
+              if (autoFields.style)
+                updates.style = mergeField(
+                  existingMetadata.style,
+                  llmData.style
+                );
+              if (autoFields.color_palette)
+                updates.color_palette = mergeArrayField(
+                  existingMetadata.color_palette,
+                  llmData.color_palette
+                );
+              if (autoFields.frame_descriptions)
+                updates.frame_descriptions = mergeArrayField(
+                  existingMetadata.frame_descriptions,
+                  llmData.frame_descriptions
+                );
+            }
+            if (taskType === "audio") {
               if (autoFields.description)
                 updates.description = mergeField(
                   existingMetadata.description,

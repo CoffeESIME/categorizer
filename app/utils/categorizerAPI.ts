@@ -21,6 +21,11 @@ export interface FileMetadata {
 
 // Interfaz para resultados de procesamiento LLM
 export interface ProcessLLMResult {
+  raw_transcription: string | undefined;
+  frame_descriptions(
+    frame_descriptions: string[] | undefined,
+    frame_descriptions1: any
+  ): string[] | undefined;
   raw_analysis?: any;
   raw?: any;
   error?: any;
@@ -70,12 +75,7 @@ export interface OCRResult {
 }
 
 // Tipos extra
-export type TaskType =
-  | "text"
-  | "image_description"
-  | "ocr"
-  | "audio"
-  | "video";
+export type TaskType = "text" | "image_description" | "ocr" | "audio" | "video";
 export type OCRMethod = "tesseract" | "llm";
 export type ProcessingMethod =
   | "manual"
