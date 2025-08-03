@@ -73,6 +73,7 @@
     "ocrTitle": "Metadatos OCR",
     "imageTitle": "Metadatos - Análisis de Imagen",
     "generalTitle": "Metadatos Generales / Manual",
+    "videoTitle": "Metadatos - Análisis de Video",
     "fields": {
       "title": "Título",
       "author": "Autor",
@@ -92,7 +93,8 @@
       "topics": "Temas (topics)",
       "style": "Estilo (style)",
       "color_palette": "Paleta de Colores",
-      "composition": "Composición (composition)"
+      "composition": "Composición (composition)",
+      "frame_descriptions": "Descripciones de fotogramas"
     },
     "placeholders": {
       "title": "Título del contenido",
@@ -110,6 +112,7 @@
       "style": "Descripción del estilo visual",
       "color_palette": "Colores separados por coma (opcional)",
       "composition": "Notas sobre la composición de la imagen",
+      "frame_descriptions": "Descripciones por fotograma separadas por línea",
       "regularContent": "Contenido del archivo",
       "analysis": "Análisis profundo del contenido"
     }

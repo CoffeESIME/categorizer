@@ -46,6 +46,7 @@ export type ProcessingFileMetadata = {
   topics?: string[];
   style?: string;
   color_palette?: string[];
+  frame_descriptions?: string[];
   composition?: string;
   file_type?: string;
 };
@@ -62,6 +63,7 @@ interface AutoFields {
   topics: boolean;
   style: boolean;
   color_palette: boolean;
+  frame_descriptions: boolean;
   composition: boolean;
 }
 
@@ -94,6 +96,7 @@ export default function ProcessFiles() {
     topics: true,
     style: true,
     color_palette: true,
+    frame_descriptions: true,
     composition: true,
   });
   const [selectedMethodForUI, setSelectedMethodForUI] =
@@ -488,11 +491,32 @@ export default function ProcessFiles() {
               llmData.multilingual !== undefined
                 ? llmData.multilingual
                 : existingMetadata.multilingual;
-            if (taskType === "video" && autoFields.description) {
-              updates.description = mergeField(
-                existingMetadata.description,
-                llmData.description
-              );
+            if (taskType === "video") {
+              if (autoFields.description)
+                updates.description = mergeField(
+                  existingMetadata.description,
+                  llmData.description
+                );
+              if (autoFields.topics)
+                updates.topics = mergeArrayField(
+                  existingMetadata.topics,
+                  llmData.topics
+                );
+              if (autoFields.style)
+                updates.style = mergeField(
+                  existingMetadata.style,
+                  llmData.style
+                );
+              if (autoFields.color_palette)
+                updates.color_palette = mergeArrayField(
+                  existingMetadata.color_palette,
+                  llmData.color_palette
+                );
+              if (autoFields.frame_descriptions)
+                updates.frame_descriptions = mergeArrayField(
+                  existingMetadata.frame_descriptions,
+                  llmData.frame_descriptions
+                );
             }
             // extracted text is merged into the content field
           } else if (taskType === "image_description") {

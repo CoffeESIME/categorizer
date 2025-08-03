@@ -73,6 +73,7 @@
     "ocrTitle": "OCR Metadata",
     "imageTitle": "Image Analysis Metadata",
     "generalTitle": "General/Manual Metadata",
+    "videoTitle": "Video Analysis Metadata",
     "fields": {
       "title": "Title",
       "author": "Author",
@@ -92,7 +93,8 @@
       "topics": "Topics",
       "style": "Style",
       "color_palette": "Color Palette",
-      "composition": "Composition"
+      "composition": "Composition",
+      "frame_descriptions": "Frame Descriptions"
     },
     "placeholders": {
       "title": "Content title",
@@ -110,6 +112,7 @@
       "style": "Visual style description",
       "color_palette": "Colors separated by comma (optional)",
       "composition": "Notes about image composition",
+      "frame_descriptions": "Frame descriptions separated by newline",
       "regularContent": "File content",
       "analysis": "In-depth content analysis"
     }

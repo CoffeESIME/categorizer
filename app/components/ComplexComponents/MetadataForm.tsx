@@ -465,8 +465,99 @@ export const MetadataForm: React.FC<MetadataFormProps> = ({
             // ... General/Manual Form Fields ...
             <div className="space-y-4 border-4 border-black rounded-lg p-4 bg-white">
               <h3 className="text-xl font-bold">
-                {t("metadataForm.generalTitle")}
+                {metadata.processingMethod === "video"
+                  ? t("metadataForm.videoTitle")
+                  : t("metadataForm.generalTitle")}
               </h3>
+              {metadata.processingMethod === "video" && (
+                <>
+                  <div>
+                    <label className="font-bold">
+                      {t("metadataForm.fields.description")}
+                    </label>
+                    <BrutalInput
+                      type="textarea"
+                      placeholder={t("metadataForm.placeholders.description")}
+                      value={metadata.description || ""}
+                      onChange={(e) =>
+                        updateMetadata({ description: e.target.value })
+                      }
+                      className="w-full p-2 border-4 border-black rounded-lg h-32"
+                      multiline
+                    />
+                  </div>
+                  <div>
+                    <label className="font-bold">
+                      {t("metadataForm.fields.topics")}
+                    </label>
+                    <BrutalInput
+                      type="text"
+                      placeholder={t("metadataForm.placeholders.topics")}
+                      value={(metadata.topics || []).join(", ")}
+                      onChange={(e) =>
+                        updateMetadata({
+                          topics: e.target.value
+                            .split(",")
+                            .map((t) => t.trim()),
+                        })
+                      }
+                      className="w-full p-2 border-4 border-black rounded-lg"
+                    />
+                  </div>
+                  <div>
+                    <label className="font-bold">
+                      {t("metadataForm.fields.style")}
+                    </label>
+                    <BrutalInput
+                      type="text"
+                      placeholder={t("metadataForm.placeholders.style")}
+                      value={metadata.style || ""}
+                      onChange={(e) => updateMetadata({ style: e.target.value })}
+                      className="w-full p-2 border-4 border-black rounded-lg"
+                    />
+                  </div>
+                  <div>
+                    <label className="font-bold">
+                      {t("metadataForm.fields.color_palette")}
+                    </label>
+                    <BrutalInput
+                      type="text"
+                      placeholder={t("metadataForm.placeholders.color_palette")}
+                      value={(metadata.color_palette || []).join(", ")}
+                      onChange={(e) =>
+                        updateMetadata({
+                          color_palette: e.target.value
+                            .split(",")
+                            .map((c) => c.trim()),
+                        })
+                      }
+                      className="w-full p-2 border-4 border-black rounded-lg"
+                    />
+                  </div>
+                  <div>
+                    <label className="font-bold">
+                      {t("metadataForm.fields.frame_descriptions")}
+                    </label>
+                    <BrutalInput
+                      type="textarea"
+                      placeholder={t(
+                        "metadataForm.placeholders.frame_descriptions"
+                      )}
+                      value={(metadata.frame_descriptions || []).join("\n")}
+                      onChange={(e) =>
+                        updateMetadata({
+                          frame_descriptions: e.target.value
+                            .split("\n")
+                            .map((f) => f.trim())
+                            .filter(Boolean),
+                        })
+                      }
+                      className="w-full p-2 border-4 border-black rounded-lg h-32"
+                      multiline
+                    />
+                  </div>
+                </>
+              )}
               <div>
                 <label className="font-bold">
                   {t("metadataForm.fields.author")}
