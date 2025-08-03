@@ -171,6 +171,10 @@ export default function ProcessFiles() {
       let defaultEmbeddingType: string = "text";
       if (mainType === "image") {
         defaultEmbeddingType = "image_w_des";
+      } else if (mainType === "audio") {
+        defaultEmbeddingType = "audio";
+      } else if (mainType === "video") {
+        defaultEmbeddingType = "video";
       } else if (file.file_type === "application/pdf") {
         defaultEmbeddingType = "pdf";
       }
@@ -242,6 +246,10 @@ export default function ProcessFiles() {
         let defaultEmbeddingType: string = "text";
         if (mainType === "image") {
           defaultEmbeddingType = "image_w_des";
+        } else if (mainType === "audio") {
+          defaultEmbeddingType = "audio";
+        } else if (mainType === "video") {
+          defaultEmbeddingType = "video";
         } else if (currentFile.file_type === "application/pdf") {
           defaultEmbeddingType = "pdf";
         }
@@ -717,10 +725,22 @@ export default function ProcessFiles() {
       else newStatus = "processing"; // Default to processing for auto methods
     }
 
+    let newEmbeddingType = currentMeta?.embedding_type || "text";
+    if (method === "image_description") {
+      newEmbeddingType = "image_w_des";
+    } else if (method === "video") {
+      newEmbeddingType = "video";
+    } else if (method === "audio") {
+      newEmbeddingType = "audio";
+    } else if (method === "llm" || method === "ocr") {
+      newEmbeddingType = "text";
+    }
+
     updateCurrentFileMetadata({
       processingMethod: method,
       processingStatus: newStatus,
       ...(method !== "manual" && { llmErrorResponse: "" }),
+      ...(method !== "manual" && { embedding_type: newEmbeddingType }),
     });
   };
 
