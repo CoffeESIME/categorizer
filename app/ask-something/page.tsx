@@ -172,34 +172,40 @@ export default function RagBrutalistSearch() {
         onSubmit={onSubmit}
         className="p-4 border-b-4 border-black bg-gray-50 flex flex-col gap-4 overflow-y-auto"
       >
-        {/* query */}
-        <div className="flex gap-4 flex-wrap">
+        {/* query & files */}
+        <div className="flex gap-4 flex-wrap items-end">
           <BrutalInput
             type="text"
             placeholder="¿Qué buscas?"
-            className="flex-1 min-w-[260px] border-4 border-black p-3 text-lg bg-white"
+            className="flex-1 min-w-[260px] text-lg"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
-          <input
+          <BrutalInput
             type="file"
             accept="image/*"
             onChange={(e) => setFile(e.target.files?.[0] || null)}
-            className="border-2 border-black p-1"
+            label="Imagen"
+            className="w-auto"
           />
-          <input
+          <BrutalInput
             type="file"
             accept="audio/*"
             onChange={(e) => setAudioFile(e.target.files?.[0] || null)}
-            className="border-2 border-black p-1"
+            label="Audio"
+            className="w-auto"
           />
-          <input
+          <BrutalInput
             type="file"
             accept="video/*"
             onChange={(e) => setVideoFile(e.target.files?.[0] || null)}
-            className="border-2 border-black p-1"
+            label="Video"
+            className="w-auto"
           />
         </div>
+        <p className="text-sm text-gray-700">
+          Elige el campo que corresponda al tipo de archivo que deseas subir.
+        </p>
 
         {/* checkboxes */}
         <div className="flex gap-4 flex-wrap">
