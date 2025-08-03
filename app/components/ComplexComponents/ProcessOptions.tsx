@@ -22,6 +22,7 @@ interface AutoFields {
   topics: boolean;
   style: boolean;
   color_palette: boolean;
+  frame_descriptions: boolean;
   composition: boolean;
 }
 
@@ -124,6 +125,10 @@ export const ProcessOptions: React.FC<ProcessOptionsProps> = ({
       case "video":
         setRenderFields([
           "description",
+          "topics",
+          "style",
+          "color_palette",
+          "frame_descriptions",
           "author",
           "title",
           "content",

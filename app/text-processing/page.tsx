@@ -56,6 +56,12 @@ interface AutoFields {
   sentiment_word: boolean;
   sentiment_value: boolean;
   languages: boolean;
+  description: boolean;
+  topics: boolean;
+  style: boolean;
+  color_palette: boolean;
+  frame_descriptions: boolean;
+  composition: boolean;
 }
 
 /**
@@ -251,6 +257,12 @@ export default function ProcessTexts() {
     languages: true,
     sentiment_word: true,
     sentiment_value: true,
+    description: true,
+    topics: true,
+    style: true,
+    color_palette: true,
+    frame_descriptions: true,
+    composition: true,
   });
 
   // Config LLM (modelo, temperatura)
