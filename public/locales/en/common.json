@@ -73,6 +73,7 @@
     "ocrTitle": "OCR Metadata",
     "imageTitle": "Image Analysis Metadata",
     "generalTitle": "General/Manual Metadata",
+    "audioTitle": "Audio Analysis Metadata",
     "videoTitle": "Video Analysis Metadata",
     "fields": {
       "title": "Title",

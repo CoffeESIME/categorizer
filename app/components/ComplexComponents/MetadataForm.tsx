@@ -461,6 +461,73 @@ export const MetadataForm: React.FC<MetadataFormProps> = ({
                 />
               </div>
             </div>
+          ) : metadata.processingMethod === "audio" ? (
+            <div className="space-y-4 border-4 border-black rounded-lg p-4 bg-white">
+              <h3 className="text-xl font-bold">
+                {t("metadataForm.audioTitle")}
+              </h3>
+              <div>
+                <label className="font-bold">
+                  {t("metadataForm.fields.description")}
+                </label>
+                <BrutalInput
+                  type="textarea"
+                  placeholder={t("metadataForm.placeholders.description")}
+                  value={metadata.description || ""}
+                  onChange={(e) =>
+                    updateMetadata({ description: e.target.value })
+                  }
+                  className="w-full p-2 border-4 border-black rounded-lg h-32"
+                  multiline
+                />
+              </div>
+              <div>
+                <label className="font-bold">
+                  {t("metadataForm.fields.author")}
+                </label>
+                <BrutalInput
+                  type="text"
+                  placeholder={t("metadataForm.placeholders.author")}
+                  value={metadata.author || ""}
+                  onChange={(e) => updateMetadata({ author: e.target.value })}
+                  className="w-full p-2 border-4 border-black rounded-lg"
+                />
+              </div>
+              <div>
+                <label className="font-bold">
+                  {t("metadataForm.fields.title")}
+                </label>
+                <BrutalInput
+                  type="text"
+                  placeholder={t("metadataForm.placeholders.title")}
+                  value={metadata.title || ""}
+                  onChange={(e) => updateMetadata({ title: e.target.value })}
+                  className="w-full p-2 border-4 border-black rounded-lg"
+                />
+              </div>
+              <div>
+                <label className="font-bold">
+                  {t("metadataForm.fields.tags")}
+                </label>
+                {renderTagSection(metadata.tags || [], addTag, removeTag)}
+              </div>
+              <div>
+                <label className="font-bold">
+                  {t("metadataForm.fields.topics")}
+                </label>
+                <BrutalInput
+                  type="text"
+                  placeholder={t("metadataForm.placeholders.topics")}
+                  value={(metadata.topics || []).join(", ")}
+                  onChange={(e) =>
+                    updateMetadata({
+                      topics: e.target.value.split(",").map((t) => t.trim()),
+                    })
+                  }
+                  className="w-full p-2 border-4 border-black rounded-lg"
+                />
+              </div>
+            </div>
           ) : (
             // ... General/Manual Form Fields ...
             <div className="space-y-4 border-4 border-black rounded-lg p-4 bg-white">
