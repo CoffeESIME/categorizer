@@ -57,7 +57,6 @@ export const ProcessOptions: React.FC<ProcessOptionsProps> = ({
 }) => {
   const { t } = useTranslation();
   const [renderFields, setRenderFields] = useState<string[]>([]);
-
   const availableMethodsForFile = currentFile
     ? getProcessingOptions(currentFile)
     : [];
@@ -417,14 +416,18 @@ export const ProcessOptions: React.FC<ProcessOptionsProps> = ({
                 {t("processOptions.autoFields")}:
               </label>
               <div className="grid grid-cols-2 gap-2">
-                {renderFields.map((field) => (
-                  <CustomCheckbox
-                    key={field}
-                    label={t(`metadataForm.fields.${field}`, field)}
-                    checked={autoFields[field]}
-                    onChange={() => toggleAutoField(field)}
-                  />
-                ))}
+                {autoFields &&
+                  renderFields.map((field) => {
+                    const isChecked = autoFields[field] ?? true;
+                    return (
+                      <CustomCheckbox
+                        key={field}
+                        label={t(`metadataForm.fields.${field}`, field)}
+                        checked={isChecked}
+                        onChange={() => toggleAutoField(field)}
+                      />
+                    );
+                  })}
               </div>
             </div>
           )}

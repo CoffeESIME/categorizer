@@ -53,7 +53,6 @@ export default function DocumentGraphVisualization() {
     []
   );
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]); // Edges are generally just Edge[]
-  console.log("nodes and edges", nodes, edges);
   const [selectedNodeForPanel, setSelectedNodeForPanel] =
     useState<DocumentNode | null>(null);
   const [loading, setLoading] = useState<boolean>(true);

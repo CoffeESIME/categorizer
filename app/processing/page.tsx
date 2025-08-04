@@ -454,7 +454,6 @@ export default function ProcessFiles() {
             processingStatus: "completed",
             llmErrorResponse: "",
           };
-          console.log("da result,", result);
           if (
             taskType === "ocr" ||
             taskType === "text" ||
@@ -665,13 +664,11 @@ export default function ProcessFiles() {
     }
   };
   const toggleAutoField = (field: string) => {
-    //
     setAutoFields((prev) => ({
       ...prev,
-      [field]: !prev[field as keyof typeof prev],
+      [field]: !(prev[field] ?? true), // ← diferencia clave
     }));
   };
-
   const addTag = (tag: string) => {
     //
     if (!currentFileId || !tag.trim()) return;
