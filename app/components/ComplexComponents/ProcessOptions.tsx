@@ -150,7 +150,10 @@ export const ProcessOptions: React.FC<ProcessOptionsProps> = ({
   }, [activeProcessingMethod]);
 
   const visionModels = React.useMemo(
-    () => llmModelOptions.filter((m) => m.groupName === "Vision Models"),
+    () =>
+      llmModelOptions.filter(
+        (m) => m.groupName === "Vision / Multimodal Models"
+      ),
     [llmModelOptions]
   );
   const textModels = React.useMemo(
@@ -166,29 +169,48 @@ export const ProcessOptions: React.FC<ProcessOptionsProps> = ({
 
   useEffect(() => {
     if (activeProcessingMethod === "image_description") {
-      if (!visionModels.some((m) => m.value === llmConfig.model) && visionModels[0]) {
+      if (
+        !visionModels.some((m) => m.value === llmConfig.model) &&
+        visionModels[0]
+      ) {
         setLlmConfig((prev) => ({ ...prev, model: visionModels[0].value }));
       }
     } else if (activeProcessingMethod === "video") {
-      if (!visionModels.some((m) => m.value === llmConfig.model) && visionModels[0]) {
+      if (
+        !visionModels.some((m) => m.value === llmConfig.model) &&
+        visionModels[0]
+      ) {
         setLlmConfig((prev) => ({ ...prev, model: visionModels[0].value }));
       }
       if (
         !textModels.some((m) => m.value === llmConfig.analysis_model) &&
         textModels[0]
       ) {
-        setLlmConfig((prev) => ({ ...prev, analysis_model: textModels[0].value }));
+        setLlmConfig((prev) => ({
+          ...prev,
+          analysis_model: textModels[0].value,
+        }));
       }
     } else if (
       activeProcessingMethod === "ocr" ||
       activeProcessingMethod === "llm" ||
       activeProcessingMethod === "audio"
     ) {
-      if (!textModels.some((m) => m.value === llmConfig.model) && textModels[0]) {
+      if (
+        !textModels.some((m) => m.value === llmConfig.model) &&
+        textModels[0]
+      ) {
         setLlmConfig((prev) => ({ ...prev, model: textModels[0].value }));
       }
     }
-  }, [activeProcessingMethod, visionModels, textModels, llmConfig, setLlmConfig, currentFile]);
+  }, [
+    activeProcessingMethod,
+    visionModels,
+    textModels,
+    llmConfig,
+    setLlmConfig,
+    currentFile,
+  ]);
 
   const currentFilteredModels =
     activeProcessingMethod === "image_description" ? visionModels : textModels;
@@ -246,7 +268,8 @@ export const ProcessOptions: React.FC<ProcessOptionsProps> = ({
                     value: m.value,
                   }))}
                   buttonLabel={
-                    visionModels.find((m) => m.value === llmConfig.model)?.label ||
+                    visionModels.find((m) => m.value === llmConfig.model)
+                      ?.label ||
                     llmConfig.model ||
                     t("processOptions.model")
                   }
@@ -342,15 +365,18 @@ export const ProcessOptions: React.FC<ProcessOptionsProps> = ({
           ) : (
             <>
               <div className="space-y-2">
-                <label className="font-bold">{t("processOptions.model")}:</label>
+                <label className="font-bold">
+                  {t("processOptions.model")}:
+                </label>
                 <BrutalDropDown
                   options={currentFilteredModels.map((m) => ({
                     label: m.label,
                     value: m.value,
                   }))}
                   buttonLabel={
-                    currentFilteredModels.find((m) => m.value === llmConfig.model)
-                      ?.label ||
+                    currentFilteredModels.find(
+                      (m) => m.value === llmConfig.model
+                    )?.label ||
                     llmConfig.model ||
                     t("processOptions.model")
                   }

@@ -72,47 +72,27 @@ export const useConfigStore = create<ConfigState>((set, get) => ({
   },
   allModels: [
     {
-      groupName: "Text Embedding Models",
+      groupName: "Vision / Multimodal Models",
       models: [
-        { label: "Granite Embeddings", value: "granite-embedding:latest" },
-        { label: "Nomic Embed Text", value: "nomic-embed-text:latest" },
+        { label: "LLaVA 13B", value: "llava:13b" },
+        { label: "LLaVA 34B", value: "llava:34b" },
+        { label: "Qwen VL 2.5 7B", value: "qwen2.5vl:7b" },
       ],
     },
-    {
-      groupName: "Vision Models",
-      models: [
-        { label: "Granite 3.2 Vision", value: "granite3.2-vision:latest" },
-        { label: "LLaVA 34B (Multimodal)", value: "llava:34b" },
-        { label: "Gemma 3 (Multimodal)", value: "gemma3:latest" },
-      ],
-    },
-    {
-      groupName: "Text Analysis/Security",
-      models: [
-        { label: "Granite 3 Guardian", value: "granite3-guardian:latest" },
-        { label: "Granite 3 Dense 8B", value: "granite3-dense:8b" },
-      ],
-    },
+
+    // ─────────── Texto generativo ───────────
     {
       groupName: "Text Generation Models",
       models: [
-        { label: "DeepSeek R1 32B", value: "deepseek-r1:32b" },
-        { label: "DeepSeek R1 70B", value: "deepseek-r1:70b" },
+        { label: "Mistral 7B", value: "mistral:7b" },
+        { label: "Mistral-NeMo 12B", value: "mistral-nemo:12b" },
         { label: "DeepSeek R1 14B", value: "deepseek-r1:14b" },
-        { label: "Llama 3.3", value: "llama3.3:latest" },
-        { label: "DeepScaler", value: "deepscaler:latest" },
-        { label: "QWQ", value: "qwq:latest" },
+        { label: "DeepSeek R1 32B", value: "deepseek-r1:32b" },
+        { label: "Qwen 3 8B", value: "qwen3:8b" },
+        { label: "Qwen 3 14B", value: "qwen3:14b" },
+        { label: "Qwen 2.5 7B", value: "qwen2.5:7b" },
+        { label: "Granite 3 Dense 8B", value: "granite3-dense:8b" },
       ],
-    },
-    {
-      groupName: "Code Models",
-      models: [
-        { label: "DeepSeek Coder v2", value: "deepseek-coder-v2:latest" },
-      ],
-    },
-    {
-      groupName: "General Purpose/Text Processing",
-      models: [{ label: "DeepScaler", value: "deepscaler:latest" }],
     },
   ],
   autoProcessSettings: {
