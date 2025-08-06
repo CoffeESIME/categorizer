@@ -21,12 +21,25 @@
     "process": "Process",
     "visualizer": "Visualizer",
     "pending": "Pending",
-    "search": "Search"
+    "search": "Search",
+    "textProcessing": "Text Processing",
+    "nodeManagement": "Node Management",
+    "chatRAG": "RAG Chat"
   },
   "homepage": {
     "title": "Welcome to Categorizer",
     "subtitle": "A tool to manage and categorize files",
-    "startButton": "Get Started"
+    "startButton": "Get Started",
+    "marquee": [
+      "Organize",
+      "Great Visuals",
+      "Categorize",
+      "Connect & Discover",
+      "Empower Insights",
+      "Simplify Data",
+      "Intelligent Mapping",
+      "Organize"
+    ]
   },
   "upload": {
     "title": "Upload Files",
@@ -35,7 +48,22 @@
     "uploading": "Uploading files...",
     "uploadSuccess": "Files uploaded successfully",
     "uploadError": "Error uploading files",
-    "continue": "Continue to processing"
+    "continue": "Continue to processing",
+    "clearAll": "Clear All",
+    "step1": "Step 1: Select Files",
+    "step2": "Step 2: Select Files to Process",
+    "filesSelected": "{{count}} files selected",
+    "selectedFilesTitle": "Selected files:",
+    "selectAtLeastOne": "Select at least one file to process",
+    "filterByType": "Filter by type:",
+    "allTypes": "All types",
+    "selectAll": "Select All",
+    "deselectAll": "Deselect All",
+    "availableFiles": "Available files:",
+    "uploaded": "Uploaded \u2713",
+    "noFilesMatch": "No files match the selected filter",
+    "selectedCount": "{{selected}} of {{total}} files selected",
+    "processSelected": "Process Selected"
   },
   "processing": {
     "title": "Process Files",
