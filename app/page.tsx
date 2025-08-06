@@ -8,9 +8,12 @@ import { useTranslation } from "react-i18next";
 
 export default function Home() {
   const { t } = useTranslation();
-  const marqueeOptions = t("homepage.marquee", {
+  const marqueeData = t("homepage.marquee", {
     returnObjects: true,
-  }) as string[];
+  });
+  const marqueeOptions = Array.isArray(marqueeData)
+    ? (marqueeData as string[])
+    : [];
   return (
     <main className="container mx-auto p-4 min-h-screen flex flex-col items-center justify-center bg-yellow-100">
       <TitleComponent title={t("homepage.title")} variant="red" />
