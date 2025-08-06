@@ -21,12 +21,25 @@
     "process": "Procesar",
     "visualizer": "Visualizador",
     "pending": "Pendientes",
-    "search": "Búsqueda"
+    "search": "Búsqueda",
+    "textProcessing": "Procesar Texto",
+    "nodeManagement": "Gestión de Nodos",
+    "chatRAG": "Chat RAG"
   },
   "homepage": {
     "title": "Bienvenido a Categorizer",
     "subtitle": "Una herramienta para gestionar y categorizar archivos",
-    "startButton": "Comenzar"
+    "startButton": "Comenzar",
+    "marquee": [
+      "Organizar",
+      "Gran visualización",
+      "Categorizar",
+      "Conectar y Descubrir",
+      "Potenciar información",
+      "Simplificar datos",
+      "Mapeo inteligente",
+      "Organizar"
+    ]
   },
   "upload": {
     "title": "Subir Archivos",
@@ -35,7 +48,22 @@
     "uploading": "Subiendo archivos...",
     "uploadSuccess": "Archivos subidos correctamente",
     "uploadError": "Error al subir los archivos",
-    "continue": "Continuar al procesamiento"
+    "continue": "Continuar al procesamiento",
+    "clearAll": "Limpiar Todo",
+    "step1": "Paso 1: Seleccionar Archivos",
+    "step2": "Paso 2: Seleccionar Archivos para Procesar",
+    "filesSelected": "{{count}} archivos seleccionados",
+    "selectedFilesTitle": "Archivos seleccionados:",
+    "selectAtLeastOne": "Selecciona al menos un archivo para procesar",
+    "filterByType": "Filtrar por tipo:",
+    "allTypes": "Todos los tipos",
+    "selectAll": "Seleccionar Todos",
+    "deselectAll": "Deseleccionar Todos",
+    "availableFiles": "Archivos disponibles:",
+    "uploaded": "Subido \u2713",
+    "noFilesMatch": "No hay archivos que coincidan con el filtro seleccionado",
+    "selectedCount": "{{selected}} de {{total}} archivos seleccionados",
+    "processSelected": "Procesar Seleccionados"
   },
   "processing": {
     "title": "Procesar Archivos",
