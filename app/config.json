@@ -34,8 +34,7 @@
     {
       "groupName": "Text Generation Models",
       "models": [
-        { "label": "DeepSeek R1 32B", "value": "deepseek-r1:32b" },
-        { "label": "DeepSeek R1 70B", "value": "deepseek-r1:70b" },
+        { "label": "GPT OSS", "value": "gpt-oss:20b" },
         { "label": "DeepSeek R1 14B", "value": "deepseek-r1:14b" },
         { "label": "Llama 3.3", "value": "llama3.3:latest" }
       ]

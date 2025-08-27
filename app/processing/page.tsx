@@ -104,7 +104,7 @@ export default function ProcessFiles() {
 
   const [llmConfig, setLlmConfig] = useState<LlmConfig>({
     model: "deepseek-r1:14b",
-    analysis_model: "deepseek-r1:14b",
+    analysis_model: "gpt-oss:20b",
     temperature: 0.7,
     vision_temperature: 0.7,
     prompt: "Describe brevemente el fotograma.",
@@ -655,7 +655,7 @@ export default function ProcessFiles() {
       });
 
       alert(t("processing.saveComplete"));
-      router.push("/pending");
+      //router.push("/pending");
     } catch (error) {
       console.error("Error al guardar metadatos:", error);
       alert(t("general.error") + ": " + t("processing.uploadError"));

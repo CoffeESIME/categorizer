@@ -92,6 +92,7 @@ export const useConfigStore = create<ConfigState>((set, get) => ({
         { label: "Qwen 3 14B", value: "qwen3:14b" },
         { label: "Qwen 2.5 7B", value: "qwen2.5:7b" },
         { label: "Granite 3 Dense 8B", value: "granite3-dense:8b" },
+        { label: "GPT OSS", value: "gpt-oss:20b" },
       ],
     },
   ],
