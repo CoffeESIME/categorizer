@@ -8,11 +8,13 @@ import categorizerAPI from "../utils/categorizerAPI";
 import CustomCheckbox from "../components/CheckBoxComponent/CheckBoxComponent";
 import { FileItem, useFileStore } from "../store/filestore";
 import { useRouter } from "next/navigation";
+import { useTranslation } from "react-i18next";
 
 export default function MultipleFileUpload() {
   const [step, setStep] = useState<0 | 1 | 2 | 3>(0);
   const [uploading, setUploading] = useState(false);
   const [filterType, setFilterType] = useState<string>("all");
+  const { t } = useTranslation();
 
   const {
     files,
@@ -72,7 +74,7 @@ export default function MultipleFileUpload() {
       setStep(2);
     } catch (error) {
       console.error("Error al subir archivos:", error);
-      alert("Error al subir archivos. Por favor intenta nuevamente.");
+      alert(t("upload.uploadError"));
     } finally {
       setUploading(false);
     }
@@ -92,7 +94,7 @@ export default function MultipleFileUpload() {
   const handleProcessFiles = async () => {
     const selectedFiles = getSelectedFiles();
     if (selectedFiles.length === 0) {
-      alert("Selecciona al menos un archivo para procesar");
+      alert(t("upload.selectAtLeastOne"));
       return;
     }
     router.push("/processing");
@@ -100,13 +102,11 @@ export default function MultipleFileUpload() {
 
   return (
     <div className="container mx-auto p-4 min-h-screen flex flex-col items-center justify-center bg-yellow-100">
-      <TitleComponent title="Upload Multiple Files" variant="neobrutalism" />
+      <TitleComponent title={t("upload.title")} variant="neobrutalism" />
       <div className="max-w-3xl mx-auto p-4 border-4 border-black bg-white rounded-lg space-y-6">
         {step === 1 && (
           <div>
-            <h2 className="text-2xl font-bold mb-4">
-              Paso 1: Seleccionar Archivos
-            </h2>
+            <h2 className="text-2xl font-bold mb-4">{t("upload.step1")}</h2>
             <div
               {...getRootProps()}
               className={`p-6 border-4 border-black rounded-lg text-center cursor-pointer text-2xl ${
@@ -115,19 +115,19 @@ export default function MultipleFileUpload() {
             >
               <input {...getInputProps()} />
               {files.length > 0 ? (
-                <p>{files.length} archivos seleccionados</p>
+                <p>{t("upload.filesSelected", { count: files.length })}</p>
               ) : (
                 <p className="text-lg font-bold">
-                  Arrastra y suelta archivos, o haz click para seleccionar
+                  {t("upload.dragDrop")}, {t("upload.browse")}
                 </p>
               )}
             </div>
 
             {files.length > 0 && (
               <div className="mt-4 border-2 border-black p-3 rounded-lg max-h-60 overflow-y-auto">
-                <h3 className="text-lg font-bold mb-2">
-                  Archivos seleccionados:
-                </h3>
+                  <h3 className="text-lg font-bold mb-2">
+                    {t("upload.selectedFilesTitle")}
+                  </h3>
                 <ul className="space-y-2">
                   {files.map((fileItem) => (
                     <li
@@ -153,14 +153,14 @@ export default function MultipleFileUpload() {
                 disabled={files.length === 0}
                 variant="red"
               >
-                Limpiar Todo
+                {t("upload.clearAll")}
               </BrutalButton>
               <BrutalButton
                 onClick={handleUpload}
                 disabled={files.length === 0 || uploading}
                 variant="blue"
               >
-                {uploading ? "Subiendo..." : "Subir Archivos"}
+                {uploading ? t("upload.uploading") : t("upload.title")}
               </BrutalButton>
             </div>
           </div>
@@ -174,21 +174,19 @@ export default function MultipleFileUpload() {
                 variant="gray"
                 className="text-black"
               >
-                Volver
+                {t("general.back")}
               </BrutalButton>
-              <h2 className="text-2xl font-bold">
-                Paso 2: Seleccionar Archivos para Procesar
-              </h2>
+              <h2 className="text-2xl font-bold">{t("upload.step2")}</h2>
             </div>
 
             <div className="mb-4 flex items-center space-x-2">
-              <span className="font-medium">Filtrar por tipo:</span>
+              <span className="font-medium">{t("upload.filterByType")}</span>
               <select
                 className="p-2 border-3 border-black rounded-lg bg-purple-200"
                 value={filterType}
                 onChange={(e) => setFilterType(e.target.value)}
               >
-                <option value="all">Todos los tipos</option>
+                <option value="all">{t("upload.allTypes")}</option>
                 {getUniqueFileTypes().map((type) => (
                   <option key={type} value={type}>
                     {type}
@@ -201,18 +199,18 @@ export default function MultipleFileUpload() {
                 variant="teal"
                 className="ml-auto"
               >
-                Seleccionar Todos
+                {t("upload.selectAll")}
               </BrutalButton>
               <BrutalButton
                 onClick={() => toggleAllSelection(false)}
                 variant="green"
               >
-                Deseleccionar Todos
+                {t("upload.deselectAll")}
               </BrutalButton>
             </div>
 
             <div className="border-2 border-black p-3 rounded-lg max-h-96 overflow-y-auto">
-              <h3 className="text-lg font-bold mb-2">Archivos disponibles:</h3>
+              <h3 className="text-lg font-bold mb-2">{t("upload.availableFiles")}</h3>
               {getFilteredFiles().length > 0 ? (
                 <ul className="space-y-2">
                   {getFilteredFiles().map((fileItem) => (
@@ -235,7 +233,7 @@ export default function MultipleFileUpload() {
                         </span>
                         {fileItem.file_url && (
                           <span className="text-xs bg-green-200 px-2 py-1 rounded">
-                            Subido ✓
+                            {t("upload.uploaded")}
                           </span>
                         )}
                       </div>
@@ -244,22 +242,24 @@ export default function MultipleFileUpload() {
                 </ul>
               ) : (
                 <p className="text-center py-4">
-                  No hay archivos que coincidan con el filtro seleccionado
+                  {t("upload.noFilesMatch")}
                 </p>
               )}
             </div>
 
             <div className="mt-4 flex justify-between">
               <span className="font-bold">
-                {getSelectedFiles().length} de {files.length} archivos
-                seleccionados
+                {t("upload.selectedCount", {
+                  selected: getSelectedFiles().length,
+                  total: files.length,
+                })}
               </span>
               <BrutalButton
                 onClick={handleProcessFiles}
                 disabled={getSelectedFiles().length === 0}
                 variant="green"
               >
-                Procesar Seleccionados
+                {t("upload.processSelected")}
               </BrutalButton>
             </div>
           </div>
@@ -267,7 +267,7 @@ export default function MultipleFileUpload() {
       </div>
       <div className="mt-4 flex justify-center">
         <ButtonLink href="/" variant="outline" size="lg">
-          <p className="text-xl">Home</p>
+          <p className="text-xl">{t("nav.home")}</p>
         </ButtonLink>
       </div>
     </div>
