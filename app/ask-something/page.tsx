@@ -161,9 +161,18 @@ export default function RagBrutalistSearch() {
             variant="neobrutalism"
             title="RAG Multimodal Search"
           />
-          <ButtonLink href="/" variant="outline" size="lg">
-            <p className="text-xl">Home</p>
-          </ButtonLink>
+          <div className="flex gap-2">
+            <ButtonLink
+              href="/ask-something/image-search"
+              variant="outline"
+              size="lg"
+            >
+              <p className="text-xl">Imágenes</p>
+            </ButtonLink>
+            <ButtonLink href="/" variant="outline" size="lg">
+              <p className="text-xl">Home</p>
+            </ButtonLink>
+          </div>
         </div>
       </div>
 
