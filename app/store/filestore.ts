@@ -11,6 +11,8 @@ export interface FileItem {
   file_type?: string;
   selected?: boolean;
   status: FileStatus;
+  taskId?: string;
+  ingestionStatus?: "idle" | "saving" | "completed" | "error";
 }
 
 interface FileStore {

@@ -15,6 +15,7 @@ import { FileList } from "../components/ComplexComponents/FileList";
 import { FilePreview } from "../components/ComplexComponents/FilePreview";
 import { ProcessOptions } from "../components/ComplexComponents/ProcessOptions";
 import { MetadataForm } from "../components/ComplexComponents/MetadataForm";
+import AudioMetadataRecorder from "../components/ComplexComponents/AudioMetadataRecorder";
 import { useConfigStore } from "../store/configStore";
 import { useRouter } from "next/navigation";
 import { useTranslation } from "react-i18next"; // For i18n
@@ -111,6 +112,7 @@ export default function ProcessFiles() {
     context: "",
   });
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isAudioSubmitting, setIsAudioSubmitting] = useState(false);
   const router = useRouter();
 
   const { getModelsByGroup, allModels } = useConfigStore();
@@ -266,11 +268,11 @@ export default function ProcessFiles() {
           embedding_type: embeddingTypeToSet, // Establecer el tipo de embedding
           processingStatus:
             existingMeta?.processingStatus === "completed" &&
-            processingMethodToSet === "manual"
+              processingMethodToSet === "manual"
               ? "completed"
               : existingMeta?.processingStatus === "failed"
-              ? "pending" // If failed, reset to pending on file switch to allow retry
-              : "pending", // Default to pending for new selections or method changes
+                ? "pending" // If failed, reset to pending on file switch to allow retry
+                : "pending", // Default to pending for new selections or method changes
         });
         setSelectedMethodForUI(processingMethodToSet);
       }
@@ -279,6 +281,55 @@ export default function ProcessFiles() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentFileId, filesToProcess]); // Dependencies actualizadas
+
+  // Polling for task status
+  useEffect(() => {
+    const activeTasks = filesToProcess.filter(
+      (f) => f.ingestionStatus === "saving" && f.taskId
+    );
+
+    if (activeTasks.length === 0) return;
+
+    const intervalId = setInterval(async () => {
+      const taskIds = activeTasks.map((f) => f.taskId!);
+      try {
+        const statuses = await categorizerAPI.getTaskStatus(taskIds);
+        // statuses: { [taskId]: "PENDING" | "SUCCESS" | "FAILURE" }
+
+        let updatesMade = false;
+        const updatedFiles = filesToProcess.map((file) => {
+          if (file.ingestionStatus !== "saving" || !file.taskId) return file;
+
+          const status = statuses[file.taskId];
+          if (status === "SUCCESS") {
+            updatesMade = true;
+            updateFile(file.id, {
+              ingestionStatus: "completed",
+              status: "categorized",
+            });
+            return {
+              ...file,
+              ingestionStatus: "completed",
+              status: "categorized",
+            } as StoreFileItem;
+          } else if (status === "FAILURE") {
+            updatesMade = true;
+            updateFile(file.id, { ingestionStatus: "error" });
+            return { ...file, ingestionStatus: "error" } as StoreFileItem;
+          }
+          return file;
+        });
+
+        if (updatesMade) {
+          setFilesToProcess(updatedFiles);
+        }
+      } catch (e) {
+        console.error("Polling error", e);
+      }
+    }, 2000);
+
+    return () => clearInterval(intervalId);
+  }, [filesToProcess, updateFile]);
 
   const getCurrentFileMetadata = () => {
     //
@@ -471,9 +522,9 @@ export default function ProcessFiles() {
               updates.content = mergeField(
                 existingMetadata.content,
                 llmData.content ||
-                  llmData.text ||
-                  llmData.ocr_text ||
-                  llmData.raw_transcription
+                llmData.text ||
+                llmData.ocr_text ||
+                llmData.raw_transcription
               );
             if (autoFields.tags)
               updates.tags = mergeArrayField(
@@ -601,6 +652,161 @@ export default function ProcessFiles() {
     }
   };
 
+  const handleAudioMetadataSubmit = async (
+    audioFile: File,
+    options?: { prompt?: string }
+  ) => {
+    const currentFile = getCurrentFile();
+    const currentMetadata = getCurrentFileMetadata();
+    if (!currentFile || !currentMetadata || !currentFileId) {
+      throw new Error(
+        t("processing.audio.noFileSelected", {
+          defaultValue:
+            "Select a file and fill in some metadata before sending audio.",
+        })
+      );
+    }
+
+    const sanitizeResponse = (payload: any) => {
+      if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
+        return null;
+      }
+      const keys = ["merged_metadata", "metadata", "data", "result", "payload"];
+      for (const key of keys) {
+        const candidate = (payload as Record<string, unknown>)[key];
+        if (
+          candidate &&
+          typeof candidate === "object" &&
+          !Array.isArray(candidate)
+        ) {
+          return candidate as Record<string, any>;
+        }
+      }
+      return payload as Record<string, any>;
+    };
+
+    setIsProcessing(true);
+    setIsAudioSubmitting(true);
+    updateCurrentFileMetadata({
+      processingStatus: "processing",
+      processingMethod: "audio",
+      llmErrorResponse: "",
+    });
+
+    try {
+      const response = await categorizerAPI.submitAudioMetadata({
+        audioFile,
+        metadata: currentMetadata,
+        fileId: currentFile.id,
+        originalName: currentFileId,
+        prompt: options?.prompt,
+      });
+
+      const parsedMetadata = sanitizeResponse(response);
+      if (!parsedMetadata) {
+        throw new Error(
+          t("processing.audio.emptyResponse", {
+            defaultValue:
+              "The service did not return metadata. Please try again.",
+          })
+        );
+      }
+
+      const llmData = parsedMetadata as Record<string, any>;
+      const transcriptionText =
+        typeof (response as any)?.transcription === "string"
+          ? (response as any).transcription
+          : typeof (response as any)?.text === "string"
+            ? (response as any).text
+            : undefined;
+
+      const updates: Partial<ProcessingFileMetadata> = {
+        processingStatus: "completed",
+        processingMethod: "audio",
+        llmErrorResponse: "",
+      };
+
+      if (autoFields.title)
+        updates.title = mergeField(currentMetadata.title, llmData.title);
+      if (autoFields.author)
+        updates.author = mergeField(currentMetadata.author, llmData.author);
+      if (autoFields.content)
+        updates.content = mergeField(
+          currentMetadata.content,
+          llmData.content ||
+          llmData.text ||
+          llmData.ocr_text ||
+          llmData.raw_transcription ||
+          llmData.transcription ||
+          transcriptionText
+        );
+      if (autoFields.tags)
+        updates.tags = mergeArrayField(currentMetadata.tags, llmData.tags);
+      if (autoFields.sentiment) {
+        updates.sentiment_word = mergeField(
+          currentMetadata.sentiment_word,
+          llmData.sentiment_word
+        );
+        updates.sentiment_value =
+          llmData.sentiment_value ?? currentMetadata.sentiment_value;
+      }
+      updates.work = llmData.work || currentMetadata.work;
+      updates.languages = llmData.languages || currentMetadata.languages;
+      updates.analysis = llmData.analysis || currentMetadata.analysis;
+      updates.categories = llmData.categories || currentMetadata.categories;
+      updates.keywords = llmData.keywords || currentMetadata.keywords;
+      updates.content_type =
+        llmData.content_type || currentMetadata.content_type;
+      updates.multilingual =
+        llmData.multilingual !== undefined
+          ? llmData.multilingual
+          : currentMetadata.multilingual;
+
+      if (autoFields.description)
+        updates.description = mergeField(
+          currentMetadata.description,
+          llmData.description
+        );
+      if (autoFields.topics)
+        updates.topics = mergeArrayField(
+          currentMetadata.topics,
+          llmData.topics
+        );
+      if (autoFields.style)
+        updates.style = mergeField(currentMetadata.style, llmData.style);
+      if (autoFields.color_palette)
+        updates.color_palette = mergeArrayField(
+          currentMetadata.color_palette,
+          llmData.color_palette
+        );
+      if (autoFields.frame_descriptions)
+        updates.frame_descriptions = mergeArrayField(
+          currentMetadata.frame_descriptions,
+          llmData.frame_descriptions
+        );
+
+      updateCurrentFileMetadata(updates);
+      setSelectedMethodForUI("audio");
+    } catch (error) {
+      console.error("Error sending audio metadata:", error);
+      updateCurrentFileMetadata({
+        processingStatus: "failed",
+        llmErrorResponse: String(error),
+      });
+      const message =
+        error instanceof Error
+          ? error.message
+          : t("processing.audio.submitError", {
+            defaultValue:
+              "There was a problem sending the audio. Please try again.",
+          });
+      throw new Error(message);
+    } finally {
+      setIsProcessing(false);
+      setIsAudioSubmitting(false);
+    }
+  };
+
   const processWithLLM = async (taskType?: TaskType) => {
     //
     const currentFile = getCurrentFile();
@@ -648,14 +854,33 @@ export default function ProcessFiles() {
           status: "categorized" as const, // Ensure status type matches FileStatus
         };
       });
-      await categorizerAPI.saveFilesMetadata(allMetadataToSave);
+      const response = await categorizerAPI.saveFilesMetadata(allMetadataToSave);
 
-      allMetadataToSave.forEach((meta) => {
-        updateFile(meta.id, { status: "categorized" });
-      });
-
-      alert(t("processing.saveComplete"));
-      //router.push("/pending");
+      // Handle async task response
+      if (response && response.task_ids) {
+        const newFiles = filesToProcess.map((file) => {
+          // Try to find task_id by file id or original_name
+          const taskId =
+            response.task_ids[file.id] || response.task_ids[file.original_name];
+          if (taskId) {
+            updateFile(file.id, { taskId, ingestionStatus: "saving" });
+            return {
+              ...file,
+              taskId,
+              ingestionStatus: "saving",
+            } as StoreFileItem;
+          }
+          return file;
+        });
+        setFilesToProcess(newFiles);
+        // Do NOT show success alert immediately
+      } else {
+        // Fallback for synchronous response (if any)
+        allMetadataToSave.forEach((meta) => {
+          updateFile(meta.id, { status: "categorized" });
+        });
+        alert(t("processing.saveComplete"));
+      }
     } catch (error) {
       console.error("Error al guardar metadatos:", error);
       alert(t("general.error") + ": " + t("processing.uploadError"));
@@ -892,6 +1117,15 @@ export default function ProcessFiles() {
                       : undefined
                   }
                 />
+                {currentFileId && (
+                  <div className="mt-4">
+                    <AudioMetadataRecorder
+                      onSubmit={handleAudioMetadataSubmit}
+                      disabled={isProcessing && !isAudioSubmitting}
+                      isSubmitting={isAudioSubmitting}
+                    />
+                  </div>
+                )}
                 {currentFileId &&
                   fileMetadata[currentFileId]?.llmErrorResponse && (
                     <div className="mt-4 p-4 border-4 border-red-600 rounded-lg bg-red-100">
@@ -913,16 +1147,22 @@ export default function ProcessFiles() {
             </ButtonLink>
             <BrutalButton
               onClick={saveAllMetadata}
-              disabled={isProcessing || processedCount < filesToProcess.length}
+              disabled={
+                isProcessing ||
+                processedCount < filesToProcess.length ||
+                filesToProcess.some((f) => f.ingestionStatus === "saving")
+              }
               variant="green"
             >
               {isProcessing
                 ? t("general.loading")
                 : processedCount < filesToProcess.length
-                ? t("processing.savingNotAllowed", {
+                  ? t("processing.savingNotAllowed", {
                     count: filesToProcess.length - processedCount,
                   })
-                : t("processing.saveMetadata")}
+                  : filesToProcess.some((f) => f.ingestionStatus === "saving")
+                    ? t("general.loading") // Or "Saving..."
+                    : t("processing.saveMetadata")}
             </BrutalButton>
           </div>
         </div>

@@ -191,7 +191,7 @@ class CategorizerAPI {
       throw error;
     }
   }
-  async saveFilesMetadata(metadata: any[]): Promise<void> {
+  async saveFilesMetadata(metadata: any[]): Promise<any> {
     try {
       const response = await fetch(`${this.baseUrl}/metadata/save`, {
         method: "POST",
@@ -204,6 +204,7 @@ class CategorizerAPI {
       if (!response.ok) {
         throw new Error(`Error: ${response.status}`);
       }
+      return await response.json();
     } catch (error) {
       console.error("Error in saveFilesMetadata:", error);
       throw error;
@@ -506,6 +507,58 @@ class CategorizerAPI {
       return data;
     } catch (error) {
       console.error("Error in multimodalSearch:", error);
+      throw error;
+    }
+  }
+
+  async submitAudioMetadata(payload: {
+    audioFile: File;
+    metadata: Record<string, any>;
+    fileId?: string;
+    originalName?: string;
+    prompt?: string;
+  }): Promise<any> {
+    const form = new FormData();
+    form.append("audio", payload.audioFile);
+    form.append("metadata", JSON.stringify(payload.metadata));
+
+    if (payload.fileId) {
+      form.append("file_id", payload.fileId);
+    }
+    if (payload.originalName) {
+      form.append("original_name", payload.originalName);
+    }
+    if (payload.prompt) {
+      form.append("prompt", payload.prompt);
+    }
+
+    try {
+      const { data } = await axios.post(
+        `${this.baseUrl}/llm/audio-metadata`,
+        form,
+        {
+          headers: {
+            ...this.headers,
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+      return data;
+    } catch (error) {
+      console.error("Error submitting audio metadata:", error);
+      throw error;
+    }
+  }
+
+  async getTaskStatus(taskIds: string[]): Promise<Record<string, string>> {
+    try {
+      const response = await axios.get(`${this.baseUrl}/tasks/status/`, {
+        params: { ids: taskIds.join(",") },
+        headers: this.headers,
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching task status:", error);
       throw error;
     }
   }
