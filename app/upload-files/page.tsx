@@ -65,7 +65,7 @@ export default function MultipleFileUpload() {
             fileMetadata.original_name.toLocaleLowerCase().trim()
         );
         if (matchingFile) {
-          updateFilePath(matchingFile.id, fileMetadata.location);
+          updateFilePath(matchingFile.id, fileMetadata.file_url || fileMetadata.location);
         }
       });
 
@@ -109,9 +109,8 @@ export default function MultipleFileUpload() {
             </h2>
             <div
               {...getRootProps()}
-              className={`p-6 border-4 border-black rounded-lg text-center cursor-pointer text-2xl ${
-                isDragActive ? "bg-green-300" : "bg-blue-300"
-              }`}
+              className={`p-6 border-4 border-black rounded-lg text-center cursor-pointer text-2xl ${isDragActive ? "bg-green-300" : "bg-blue-300"
+                }`}
             >
               <input {...getInputProps()} />
               {files.length > 0 ? (
@@ -134,9 +133,12 @@ export default function MultipleFileUpload() {
                       key={fileItem.id}
                       className="flex items-center justify-between p-2 border-b border-gray-300"
                     >
-                      <span className="text-sm font-medium truncate max-w-xs">
+                      <span className="text-sm font-medium truncate max-w-xs flex items-center gap-2">
                         {fileItem.file!.name} (
                         {(fileItem.file!.size / 1024).toFixed(2)} KB)
+                        {uploading && (
+                          <span className="animate-spin h-4 w-4 border-2 border-blue-500 rounded-full border-t-transparent"></span>
+                        )}
                       </span>
                       <span className="text-xs bg-gray-200 px-2 py-1 rounded">
                         {fileItem.file_type}
@@ -218,9 +220,8 @@ export default function MultipleFileUpload() {
                   {getFilteredFiles().map((fileItem) => (
                     <li
                       key={fileItem.id}
-                      className={`flex items-center justify-between p-2 border-b border-gray-300 rounded ${
-                        fileItem.selected ? "bg-green-100" : ""
-                      }`}
+                      className={`flex items-center justify-between p-2 border-b border-gray-300 rounded ${fileItem.selected ? "bg-green-100" : ""
+                        }`}
                     >
                       <div className="flex items-center">
                         <CustomCheckbox

@@ -13,7 +13,8 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
 }) => {
   if (!file) return null;
   const mainType = getMainFileType(file);
-  const fileURL = `${process.env.NEXT_PUBLIC_CATEGORIZER_URL}${file.file_url}`;
+  // Use presigned URL directly from backend
+  const fileURL = file.file_url;
 
   if (mainType === "image") {
     return (

@@ -300,8 +300,8 @@ export default function ProcessFiles() {
         const updatedFiles = filesToProcess.map((file) => {
           if (file.ingestionStatus !== "saving" || !file.taskId) return file;
 
-          const status = statuses[file.taskId];
-          if (status === "SUCCESS") {
+          const taskInfo = statuses[file.taskId];
+          if (taskInfo && taskInfo.status === "SUCCESS") {
             updatesMade = true;
             updateFile(file.id, {
               ingestionStatus: "completed",
@@ -312,7 +312,7 @@ export default function ProcessFiles() {
               ingestionStatus: "completed",
               status: "categorized",
             } as StoreFileItem;
-          } else if (status === "FAILURE") {
+          } else if (taskInfo && taskInfo.status === "FAILURE") {
             updatesMade = true;
             updateFile(file.id, { ingestionStatus: "error" });
             return { ...file, ingestionStatus: "error" } as StoreFileItem;

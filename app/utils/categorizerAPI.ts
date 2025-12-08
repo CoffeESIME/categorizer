@@ -22,10 +22,7 @@ export interface FileMetadata {
 // Interfaz para resultados de procesamiento LLM
 export interface ProcessLLMResult {
   raw_transcription: string | undefined;
-  frame_descriptions(
-    frame_descriptions: string[] | undefined,
-    frame_descriptions1: any
-  ): string[] | undefined;
+  frame_descriptions?: string[];
   raw_analysis?: any;
   raw?: any;
   error?: any;
@@ -550,7 +547,7 @@ class CategorizerAPI {
     }
   }
 
-  async getTaskStatus(taskIds: string[]): Promise<Record<string, string>> {
+  async getTaskStatus(taskIds: string[]): Promise<Record<string, { status: string; result?: any; error?: any }>> {
     try {
       const response = await axios.get(`${this.baseUrl}/tasks/status/`, {
         params: { ids: taskIds.join(",") },
